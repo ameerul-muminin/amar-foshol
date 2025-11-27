@@ -113,7 +113,7 @@ A farmer-friendly app that provides:
 
 ---
 
-### A2: Farmer & Crop Management (Yasin)
+### A2: Farmer & Crop Management (Joydeep)
 
 **Purpose:** Register farmers and track crop batches
 
@@ -177,7 +177,7 @@ A farmer-friendly app that provides:
 
 ---
 
-### A3: Weather Integration (Joydeep)
+### A3: Weather Integration (Yasin)
 
 **Purpose:** Provide hyper-local weather forecasts with actionable Bangla advisories
 
