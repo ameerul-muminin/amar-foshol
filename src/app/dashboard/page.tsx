@@ -152,7 +152,10 @@ export default function DashboardPage() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Card */}
-        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-3xl p-6 sm:p-8 text-white mb-8">
+        <div 
+          onClick={() => router.push('/dashboard/profile')}
+          className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-3xl p-6 sm:p-8 text-white mb-8 cursor-pointer hover:shadow-xl transition-all"
+        >
           <div className="flex items-start justify-between">
             <div>
               <p className="text-emerald-100 text-sm mb-2">{text.welcome}</p>
