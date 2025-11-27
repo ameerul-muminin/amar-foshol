@@ -211,12 +211,15 @@ export default function DashboardPage() {
               <p className="text-sm text-gray-500">{text.comingSoon}</p>
             </button>
 
-            <button className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-emerald-500 transition-all text-left group">
+            <button 
+              onClick={() => router.push('/dashboard/batches')}
+              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-emerald-500 transition-all text-left group"
+            >
               <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600 mb-4 group-hover:bg-amber-500 group-hover:text-white transition-colors">
                 <Package size={24} weight="duotone" />
               </div>
               <h4 className="font-bold text-gray-900 mb-1">{text.batches}</h4>
-              <p className="text-sm text-gray-500">{text.comingSoon}</p>
+              <p className="text-sm text-gray-500">{lang === 'bn' ? 'ফসল ব্যাচ দেখুন' : 'View crop batches'}</p>
             </button>
 
             <button className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-emerald-500 transition-all text-left group">
