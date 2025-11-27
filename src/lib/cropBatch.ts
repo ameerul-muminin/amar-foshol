@@ -113,6 +113,15 @@ export async function createCropBatch(data: {
     await batchStore.setItem(batch.id, batch);
 
     console.log('✅ Crop batch created:', batch.id);
+
+    // Award "First Batch" badge
+    try {
+      const { awardBadge } = await import('./auth');
+      await awardBadge(data.farmerId, 'first_batch');
+    } catch (error) {
+      console.error('Error awarding badge:', error);
+    }
+
     return batch;
   } catch (error) {
     console.error('Error creating crop batch:', error);
