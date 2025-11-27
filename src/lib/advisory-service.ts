@@ -11,6 +11,14 @@ export interface WeatherForecast {
   rainProbability: number;
 }
 
+export interface WeatherData {
+  date: string;
+  tempMax: number;
+  tempMin: number;
+  humidity: number;
+  rainProbability: number;
+}
+
 export interface Advisory {
   id: string;
   type: 'critical' | 'warning' | 'info' | 'success';
