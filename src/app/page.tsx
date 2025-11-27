@@ -2,465 +2,433 @@
 
 import { useState, useEffect } from 'react';
 import { 
-  Grains, 
-  Warning, 
   ShieldCheck, 
   Plant,
-  Sun,
   CloudRain,
-  Thermometer,
   ArrowRight,
   Globe,
-  UserPlus,
-  ChartLineUp,
-  Medal
+  UserCircle,
+  Medal,
+  TrendDown,
+  Database,
+  CheckCircle,
+  List
 } from '@phosphor-icons/react';
 
 // Translations
 const translations = {
   en: {
     nav: {
+      logo: 'Amar Foshol',
       home: 'Home',
       features: 'Features',
-      register: 'Register'
+      contact: 'Contact',
+      login: 'Login'
     },
     hero: {
-      badge: '🚨 4.5 Million Tonnes Lost Every Year',
-      title: 'Protect Your Harvest',
-      titleHighlight: 'Save Your Future',
-      subtitle: 'Bangladesh loses $1.5 billion worth of crops annually. আমার ফসল helps farmers prevent food loss with smart weather alerts and storage guidance.',
-      cta: 'Start Protecting Your Crops',
-      secondaryCta: 'Learn More'
+      badge: 'HackFest 2025',
+      title: 'Transforming Agriculture Through Data & Sustainability',
+      subtitle: 'Helping Bangladeshi farmers reduce post-harvest food losses through smart weather alerts and actionable guidance.',
+      cta: 'Join Now',
+      stat: '4.5M Tonnes Saved'
     },
-    problem: {
+    stats: {
       title: 'The Crisis We Face',
-      stat1: '4.5M',
-      stat1Label: 'Tonnes of grain lost yearly',
-      stat2: '$1.5B',
-      stat2Label: 'Economic loss annually',
-      stat3: '32%',
-      stat3Label: 'Of staple foods wasted',
-      description: 'Poor storage, unpredictable weather, and lack of timely information cause devastating losses for Bangladeshi farmers.'
-    },
-    workflow: {
-      title: 'How আমার ফসল Saves Your Crops',
-      step1: 'Register Crop',
-      step1Desc: 'Log your harvest details',
-      step2: 'Get Alerts',
-      step2Desc: 'Weather & risk warnings',
-      step3: 'Take Action',
-      step3Desc: 'Follow simple guidance',
-      step4: 'Save Food',
-      step4Desc: 'Reduce losses, earn more'
+      cards: [
+        { title: 'Food Loss', val: '4.5M', desc: 'Metric tonnes of grain lost annually.' },
+        { title: 'Economic Impact', val: '$1.5B', desc: 'USD lost from the economy every year.' },
+        { title: 'Wasted Supply', val: '32%', desc: 'Of staple foods never reach the market.' }
+      ]
     },
     features: {
-      title: 'Everything You Need',
-      feature1: 'Weather Forecasts',
-      feature1Desc: '5-day local weather in Bangla',
-      feature2: 'Crop Tracking',
-      feature2Desc: 'Manage all your harvests',
-      feature3: 'Smart Alerts',
-      feature3Desc: 'Timely risk warnings',
-      feature4: 'Earn Badges',
-      feature4Desc: 'Rewards for good practices'
+      title: 'Smart Farming Solutions',
+      subtitle: 'Our technology empowers farmers to make data-driven decisions.',
+      items: [
+        { title: 'Crop Registration', desc: 'Track harvested batches digitally.' },
+        { title: 'Hyper-local Weather', desc: '5-day forecasts in Bangla.' },
+        { title: 'Risk Alerts', desc: 'Real-time actionable advisories.' },
+        { title: 'Gamification', desc: 'Earn badges for good practices.' }
+      ],
+      highlight1: 'Early Warning System',
+      highlight2: 'Farm Analytics',
+      highlight2Desc: 'Data visualized for better yield.',
+      viewAll: 'View All Features'
     },
-    cta: {
-      title: 'Ready to Protect Your Harvest?',
-      subtitle: 'Join thousands of farmers saving their crops',
-      button: 'Register Now - Free'
+    workflow: {
+      title: 'How It Works',
+      steps: [
+        { title: 'Data Collection', desc: 'Input crop & location data.' },
+        { title: 'Smart Analysis', desc: 'System checks weather risks.' },
+        { title: 'Actionable Alert', desc: 'Receive timely warnings.' },
+        { title: 'Saved Harvest', desc: 'Prevent loss & increase profit.' }
+      ],
+      ctaTitle: 'Join Now',
+      ctaSubtitle: 'Join thousands of farmers protecting their livelihood today.',
+      ctaButton: 'Register Now'
     },
     footer: {
-      tagline: 'Reducing food loss, one harvest at a time.',
-      hackfest: 'Built for EDU HackFest 2025'
+      text: 'Team SteveJobs. Built for EDU HackFest 2025.',
+      copyright: '© 2025 Amar Foshol. All rights reserved.',
+      hackfest: 'Designed for EDU HackFest'
     }
   },
   bn: {
     nav: {
+      logo: 'আমার ফসল',
       home: 'হোম',
-      features: 'সুবিধা',
-      register: 'নিবন্ধন'
+      features: 'বৈশিষ্ট্য',
+      contact: 'যোগাযোগ',
+      login: 'লগইন'
     },
     hero: {
-      badge: '🚨 প্রতি বছর ৪৫ লক্ষ টন খাদ্য নষ্ট',
-      title: 'আপনার ফসল রক্ষা করুন',
-      titleHighlight: 'ভবিষ্যৎ বাঁচান',
-      subtitle: 'বাংলাদেশে প্রতি বছর ১.৫ বিলিয়ন ডলারের ফসল নষ্ট হয়। আমার ফসল কৃষকদের আবহাওয়া সতর্কতা ও সংরক্ষণ পরামর্শ দিয়ে সাহায্য করে।',
-      cta: 'ফসল সুরক্ষা শুরু করুন',
-      secondaryCta: 'আরও জানুন'
+      badge: 'হ্যাকফেস্ট ২০২৫',
+      title: 'তথ্য ও প্রযুক্তির মাধ্যমে কৃষিতে নতুন দিগন্ত',
+      subtitle: 'স্মার্ট আবহাওয়া বার্তা এবং সঠিক নির্দেশনার মাধ্যমে কৃষকদের ফসল ও মুনাফা রক্ষা করি।',
+      cta: 'রেজিস্ট্রেশন করুন',
+      stat: '৪.৫ মিলিয়ন টন রক্ষা'
     },
-    problem: {
-      title: 'আমাদের সমস্যা',
-      stat1: '৪৫ লক্ষ',
-      stat1Label: 'টন শস্য নষ্ট প্রতি বছর',
-      stat2: '১.৫ বিলিয়ন',
-      stat2Label: 'ডলার ক্ষতি বছরে',
-      stat3: '৩২%',
-      stat3Label: 'খাদ্য অপচয় হয়',
-      description: 'দুর্বল সংরক্ষণ, অনিশ্চিত আবহাওয়া এবং সময়মতো তথ্যের অভাবে বাংলাদেশের কৃষকরা বিশাল ক্ষতির সম্মুখীন হন।'
-    },
-    workflow: {
-      title: 'আমার ফসল কীভাবে কাজ করে',
-      step1: 'ফসল নিবন্ধন',
-      step1Desc: 'ফসলের তথ্য দিন',
-      step2: 'সতর্কতা পান',
-      step2Desc: 'আবহাওয়া ও ঝুঁকি সতর্কতা',
-      step3: 'পদক্ষেপ নিন',
-      step3Desc: 'সহজ নির্দেশনা অনুসরণ করুন',
-      step4: 'ফসল বাঁচান',
-      step4Desc: 'ক্ষতি কমান, বেশি আয় করুন'
+    stats: {
+      title: 'আমাদের চ্যালেঞ্জ',
+      cards: [
+        { title: 'খাদ্য অপচয়', val: '৪.৫ মি.', desc: 'মেট্রিক টন শস্য প্রতি বছর নষ্ট হয়।' },
+        { title: 'অর্থনৈতিক ক্ষতি', val: '$১.৫ বি.', desc: 'প্রতি বছর অর্থনীতি থেকে হারিয়ে যাচ্ছে।' },
+        { title: 'সরবরাহ ঘাটতি', val: '৩২%', desc: 'মৌলিক খাদ্য বাজারে পৌঁছায় না।' }
+      ]
     },
     features: {
-      title: 'আপনার জন্য সব সুবিধা',
-      feature1: 'আবহাওয়ার পূর্বাভাস',
-      feature1Desc: '৫ দিনের স্থানীয় আবহাওয়া বাংলায়',
-      feature2: 'ফসল ট্র্যাকিং',
-      feature2Desc: 'সব ফসল পরিচালনা করুন',
-      feature3: 'স্মার্ট সতর্কতা',
-      feature3Desc: 'সময়মতো ঝুঁকি সতর্কতা',
-      feature4: 'ব্যাজ অর্জন',
-      feature4Desc: 'ভালো অভ্যাসের পুরস্কার'
+      title: 'স্মার্ট কৃষি সমাধান',
+      subtitle: 'আমাদের প্রযুক্তি কৃষকদের সঠিক সিদ্ধান্ত নিতে সাহায্য করে।',
+      items: [
+        { title: 'ফসল নিবন্ধন', desc: 'ডিজিটালভাবে ফসলের হিসাব রাখুন।' },
+        { title: 'স্থানীয় আবহাওয়া', desc: 'বাংলায় ৫ দিনের পূর্বাভাস।' },
+        { title: 'ঝুঁকি সতর্কতা', desc: 'তাৎক্ষণিক প্রয়োজনীয় পরামর্শ।' },
+        { title: 'গেমফিকেশন', desc: 'ভালো কাজের জন্য ব্যাজ জিতুন।' }
+      ],
+      highlight1: 'আগাম সতর্কতা ব্যবস্থা',
+      highlight2: 'ফার্ম অ্যানালিটিক্স',
+      highlight2Desc: 'উন্নত ফলনের জন্য তথ্য বিশ্লেষণ।',
+      viewAll: 'সব বৈশিষ্ট্য দেখুন'
     },
-    cta: {
-      title: 'ফসল রক্ষা করতে প্রস্তুত?',
-      subtitle: 'হাজারো কৃষকের সাথে যোগ দিন',
-      button: 'বিনামূল্যে নিবন্ধন করুন'
+    workflow: {
+      title: 'কিভাবে কাজ করে',
+      steps: [
+        { title: 'তথ্য সংগ্রহ', desc: 'ফসল ও অবস্থানের তথ্য দিন।' },
+        { title: 'স্মার্ট বিশ্লেষণ', desc: 'আবহাওয়ার ঝুঁকি যাচাই।' },
+        { title: 'সতর্কবার্তা', desc: 'সঠিক সময়ে সতর্কবার্তা পান।' },
+        { title: 'ফসল রক্ষা', desc: 'ক্ষতি কমান ও লাভ বাড়ান।' }
+      ],
+      ctaTitle: 'রেজিস্ট্রেশন করুন',
+      ctaSubtitle: 'হাজারো কৃষক আজই তাদের জীবিকা রক্ষা করছে।',
+      ctaButton: 'এখনই নিবন্ধন করুন'
     },
     footer: {
-      tagline: 'প্রতিটি ফসল রক্ষায় আমরা পাশে।',
-      hackfest: 'EDU HackFest 2025 এর জন্য তৈরি'
+      text: 'টিম স্টিভজবস। EDU হ্যাকফেস্ট ২০২৫ এর জন্য তৈরি।',
+      copyright: '© ২০২৫ আমার ফসল। সর্বস্বত্ব সংরক্ষিত।',
+      hackfest: 'EDU হ্যাকফেস্ট এর জন্য ডিজাইন করা'
     }
   }
 };
 
+// Feature icons mapping
+const featureIcons = [Plant, CloudRain, ShieldCheck, Medal];
+
 export default function LandingPage() {
   const [lang, setLang] = useState<'en' | 'bn'>('bn');
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const t = translations[lang];
 
   useEffect(() => {
-    setIsLoaded(true);
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const toggleLang = () => setLang(prev => prev === 'en' ? 'bn' : 'en');
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-950 via-emerald-900 to-slate-900 text-white overflow-x-hidden">
-      {/* Animated Background Pattern */}
-      <div className="fixed inset-0 opacity-10 pointer-events-none">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2310b981' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        }} />
-      </div>
-
-      {/* Floating Grain Animation */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        {[...Array(6)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute animate-float opacity-20"
-            style={{
-              left: `${15 + i * 15}%`,
-              animationDelay: `${i * 0.5}s`,
-              animationDuration: `${4 + i}s`,
-            }}
-          >
-            <Grains size={32 + i * 8} className="text-amber-400" />
-          </div>
-        ))}
-      </div>
-
+    <div className="min-h-screen bg-gray-50 text-slate-800 selection:bg-lime-300 selection:text-emerald-900">
+      
       {/* Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-700 ${isLoaded ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 sm:h-20 items-center justify-between">
+      <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
+        isScrolled ? 'bg-white/90 backdrop-blur-md shadow-sm' : 'bg-white/80 backdrop-blur-md'
+      } border-b border-gray-100`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
             {/* Logo */}
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="relative">
-                <div className="absolute inset-0 bg-amber-400 blur-lg opacity-50 animate-pulse" />
-                <Plant size={32} weight="duotone" className="relative text-amber-400 sm:w-10 sm:h-10" />
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white">
+                <Plant size={20} weight="fill" />
               </div>
-              <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-amber-300 to-emerald-300 bg-clip-text text-transparent">
-                আমার ফসল
-              </span>
+              <span className="font-bold text-xl text-emerald-900 tracking-tight">{t.nav.logo}</span>
+            </div>
+            
+            {/* Desktop Nav */}
+            <div className="hidden md:flex items-center space-x-8">
+              <a href="#" className="text-gray-600 hover:text-emerald-500 transition-colors">{t.nav.home}</a>
+              <a href="#features" className="text-gray-600 hover:text-emerald-500 transition-colors">{t.nav.features}</a>
+              <button 
+                onClick={toggleLang}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 hover:border-emerald-500 transition-colors text-sm font-medium"
+              >
+                <Globe size={14} weight="bold" />
+                {lang === 'en' ? 'বাংলা' : 'ENG'}
+              </button>
+              <button className="bg-emerald-900 text-white px-5 py-2 rounded-full hover:bg-emerald-500 transition-colors shadow-lg shadow-emerald-500/20">
+                {t.nav.login}
+              </button>
             </div>
 
-            {/* Language Toggle */}
-            <button
-              onClick={() => setLang(lang === 'en' ? 'bn' : 'en')}
-              className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 transition-all duration-300 hover:scale-105 active:scale-95"
-            >
-              <Globe size={18} className="sm:w-5 sm:h-5" />
-              <span className="text-sm sm:text-base font-medium">{lang === 'en' ? 'বাংলা' : 'English'}</span>
-            </button>
+            {/* Mobile Nav */}
+            <div className="md:hidden flex items-center gap-4">
+              <button onClick={toggleLang} className="text-sm font-bold text-emerald-900">
+                {lang === 'en' ? 'BN' : 'EN'}
+              </button>
+              <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+                <List size={24} className="text-gray-600" />
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-white border-t border-gray-100 px-4 py-4 space-y-3">
+            <a href="#" className="block text-gray-600 hover:text-emerald-500">{t.nav.home}</a>
+            <a href="#features" className="block text-gray-600 hover:text-emerald-500">{t.nav.features}</a>
+            <button className="w-full bg-emerald-900 text-white px-5 py-2 rounded-full hover:bg-emerald-500 transition-colors">
+              {t.nav.login}
+            </button>
+          </div>
+        )}
       </nav>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center px-4 pt-20 sm:pt-0">
-        <div className="max-w-5xl mx-auto text-center">
-          {/* Alert Badge */}
-          <div className={`inline-flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-3 rounded-full bg-red-500/20 border border-red-400/30 text-red-300 mb-6 sm:mb-8 transition-all duration-700 delay-200 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-            <span className="relative flex h-2 w-2 sm:h-3 sm:w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 sm:h-3 sm:w-3 bg-red-500"></span>
-            </span>
-            <span className="text-sm sm:text-base font-medium">{t.hero.badge}</span>
-          </div>
+      <header className="pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="relative rounded-[2.5rem] overflow-hidden bg-emerald-900 text-white min-h-[500px] sm:min-h-[600px] flex items-end p-6 md:p-12 group">
+          {/* Background Image */}
+          <img 
+            src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?q=80&w=2070&auto=format&fit=crop" 
+            alt="Farmer in field" 
+            className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
+          />
+          
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-emerald-900/40 to-transparent"></div>
 
-          {/* Main Heading */}
-          <h1 className={`text-4xl sm:text-5xl md:text-7xl font-black leading-tight mb-4 sm:mb-6 transition-all duration-700 delay-300 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-            <span className="block text-white">{t.hero.title}</span>
-            <span className="block bg-gradient-to-r from-amber-300 via-emerald-300 to-amber-300 bg-clip-text text-transparent animate-gradient bg-[length:200%_auto]">
-              {t.hero.titleHighlight}
-            </span>
-          </h1>
-
-          {/* Subtitle */}
-          <p className={`text-lg sm:text-xl md:text-2xl text-emerald-100/80 max-w-3xl mx-auto mb-8 sm:mb-10 leading-relaxed px-4 transition-all duration-700 delay-400 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-            {t.hero.subtitle}
-          </p>
-
-          {/* CTA Buttons */}
-          <div className={`flex flex-col sm:flex-row gap-4 justify-center items-center transition-all duration-700 delay-500 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-            <button className="group w-full sm:w-auto px-6 py-4 sm:px-8 sm:py-5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-emerald-950 font-bold text-lg sm:text-xl rounded-2xl shadow-lg shadow-amber-500/30 hover:shadow-amber-400/50 transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center gap-3">
-              {t.hero.cta}
-              <ArrowRight size={24} className="group-hover:translate-x-1 transition-transform" />
-            </button>
-            <button className="w-full sm:w-auto px-6 py-4 sm:px-8 sm:py-5 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 font-semibold text-lg sm:text-xl rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95">
-              {t.hero.secondaryCta}
-            </button>
-          </div>
-        </div>
-
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-          <div className="w-6 h-10 rounded-full border-2 border-white/30 flex items-start justify-center p-2">
-            <div className="w-1 h-2 bg-white/50 rounded-full animate-scroll" />
-          </div>
-        </div>
-      </section>
-
-      {/* Problem Statistics Section */}
-      <section className="relative py-16 sm:py-24 px-4">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-4 sm:mb-6">
-            {t.problem.title}
-          </h2>
-          <p className="text-base sm:text-lg text-emerald-100/70 text-center max-w-2xl mx-auto mb-12 sm:mb-16 px-4">
-            {t.problem.description}
-          </p>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
-            {[
-              { value: t.problem.stat1, label: t.problem.stat1Label, color: 'from-red-500 to-orange-500' },
-              { value: t.problem.stat2, label: t.problem.stat2Label, color: 'from-amber-500 to-yellow-500' },
-              { value: t.problem.stat3, label: t.problem.stat3Label, color: 'from-orange-500 to-red-500' },
-            ].map((stat, i) => (
-              <div
-                key={i}
-                className="group relative p-6 sm:p-8 rounded-3xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all duration-500 hover:scale-105"
-              >
-                <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-10 rounded-3xl transition-opacity duration-500`} />
-                <div className={`text-4xl sm:text-5xl md:text-6xl font-black bg-gradient-to-r ${stat.color} bg-clip-text text-transparent mb-2`}>
-                  {stat.value}
-                </div>
-                <div className="text-base sm:text-lg text-emerald-100/70">{stat.label}</div>
+          {/* Content */}
+          <div className="relative z-10 w-full max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-lime-300/20 border border-lime-300/30 text-lime-300 text-sm font-medium mb-6 backdrop-blur-sm">
+              <span className="w-2 h-2 rounded-full bg-lime-300 animate-pulse"></span>
+              {t.hero.badge}
+            </div>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+              {t.hero.title}
+            </h1>
+            <p className="text-base sm:text-lg md:text-xl text-gray-200 mb-8 max-w-lg leading-relaxed">
+              {t.hero.subtitle}
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <button className="bg-white text-emerald-900 px-6 sm:px-8 py-3 sm:py-3.5 rounded-full font-bold hover:bg-lime-300 transition-all transform hover:-translate-y-1 shadow-lg">
+                {t.hero.cta}
+              </button>
+              <div className="flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-3.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10">
+                <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
+                <span className="font-medium text-sm sm:text-base">{t.hero.stat}</span>
               </div>
-            ))}
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Stats Section */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">{t.stats.title}</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {t.stats.cards.map((card, idx) => {
+            const icons = [TrendDown, Database, ShieldCheck];
+            const Icon = icons[idx];
+            return (
+              <div key={idx} className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 group">
+                <div className="flex justify-between items-start mb-6 sm:mb-8">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-900 group-hover:bg-lime-300 group-hover:text-emerald-900 transition-colors">
+                    <Icon size={24} weight="duotone" />
+                  </div>
+                  <div className="w-6 h-6 rounded-full bg-black text-white flex items-center justify-center text-xs">
+                    <CheckCircle size={12} weight="fill" />
+                  </div>
+                </div>
+                <h3 className="text-base sm:text-lg font-semibold text-gray-600 mb-2">{card.title}</h3>
+                <div className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">{card.val}</div>
+                <p className="text-gray-500 text-sm leading-relaxed">{card.desc}</p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Dark Features Section */}
+      <section id="features" className="py-16 sm:py-20 bg-black text-white my-12 rounded-[2rem] sm:rounded-[3rem] max-w-[98%] mx-auto relative overflow-hidden">
+        {/* Decorative gradient blob */}
+        <div className="absolute top-0 right-0 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-emerald-500/20 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div className="relative z-10 px-4 sm:px-6 md:px-20">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 sm:mb-16 gap-6 sm:gap-8">
+            <div className="max-w-xl">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight">
+                {t.features.title}
+              </h2>
+              <p className="text-gray-400 text-base sm:text-lg">
+                {t.features.subtitle}
+              </p>
+            </div>
+            <button className="bg-lime-300 text-emerald-900 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full font-bold hover:bg-white transition-colors flex items-center gap-2 text-sm sm:text-base">
+              {t.features.viewAll} <ArrowRight size={18} weight="bold" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {t.features.items.map((item, idx) => {
+              const Icon = featureIcons[idx];
+              return (
+                <div key={idx} className="bg-white/5 backdrop-blur-sm border border-white/10 p-5 sm:p-6 rounded-3xl hover:bg-white/10 transition-all group cursor-pointer">
+                  <div className="mb-16 sm:mb-32 relative">
+                    <div className="absolute top-0 right-0 p-2 bg-emerald-500 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:scale-110">
+                      <ArrowRight size={20} className="text-black" weight="bold" />
+                    </div>
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-emerald-900/50 rounded-2xl flex items-center justify-center text-lime-300">
+                      <Icon size={28} weight="duotone" />
+                    </div>
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-bold mb-2">{item.title}</h3>
+                  <p className="text-sm text-gray-400">{item.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Large Feature Highlight Cards */}
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-lime-300 rounded-3xl p-6 sm:p-8 relative overflow-hidden h-64 sm:h-80 group">
+              <div className="relative z-10">
+                <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center text-white mb-4">
+                  <ShieldCheck size={18} weight="fill" />
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-bold text-emerald-900 max-w-[200px]">
+                  {t.features.highlight1}
+                </h3>
+              </div>
+              <img 
+                src="https://images.unsplash.com/photo-1586771107445-d3ca888129ff?q=80&w=2072&auto=format&fit=crop" 
+                alt="Rice" 
+                className="absolute bottom-0 right-0 w-2/3 sm:w-3/4 h-2/3 sm:h-3/4 object-cover rounded-tl-3xl shadow-2xl transition-transform group-hover:scale-105"
+              />
+            </div>
+
+            <div className="bg-neutral-800 rounded-3xl p-6 sm:p-8 relative overflow-hidden h-64 sm:h-80 group text-white">
+              <div className="relative z-10">
+                <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white mb-4">
+                  <Database size={18} weight="fill" />
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-bold max-w-[200px]">
+                  {t.features.highlight2}
+                </h3>
+                <p className="text-gray-400 mt-2 text-sm max-w-[200px]">{t.features.highlight2Desc}</p>
+              </div>
+              <img 
+                src="https://images.unsplash.com/photo-1516253593875-bd7ba052fbc5?q=80&w=2070&auto=format&fit=crop" 
+                alt="Analytics" 
+                className="absolute top-1/2 right-0 w-1/2 h-full object-cover transform -translate-y-1/4 rounded-l-3xl opacity-60 group-hover:opacity-80 transition-opacity"
+              />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Workflow Section - Data → Warning → Action → Saved Food */}
-      <section className="relative py-16 sm:py-24 px-4 bg-gradient-to-b from-transparent via-emerald-900/50 to-transparent">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-12 sm:mb-16">
-            {t.workflow.title}
-          </h2>
-
-          {/* Workflow Steps */}
-          <div className="relative">
-            {/* Connection Line - Hidden on mobile, visible on larger screens */}
-            <div className="hidden sm:block absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-amber-500 to-emerald-500 -translate-y-1/2 opacity-30" />
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-              {[
-                { icon: Grains, title: t.workflow.step1, desc: t.workflow.step1Desc, color: 'emerald', delay: '0ms' },
-                { icon: Warning, title: t.workflow.step2, desc: t.workflow.step2Desc, color: 'amber', delay: '100ms' },
-                { icon: ShieldCheck, title: t.workflow.step3, desc: t.workflow.step3Desc, color: 'blue', delay: '200ms' },
-                { icon: Plant, title: t.workflow.step4, desc: t.workflow.step4Desc, color: 'green', delay: '300ms' },
-              ].map((step, i) => (
-                <div
-                  key={i}
-                  className="group relative"
-                  style={{ animationDelay: step.delay }}
-                >
-                  {/* Arrow between steps - Mobile */}
-                  {i < 3 && (
-                    <div className="sm:hidden flex justify-center my-2">
-                      <ArrowRight size={24} className="text-emerald-400/50 rotate-90" />
-                    </div>
-                  )}
-                  
-                  <div className="relative p-6 sm:p-8 rounded-3xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/30 transition-all duration-500 hover:scale-105 hover:-translate-y-2">
-                    {/* Step Number */}
-                    <div className="absolute -top-3 -right-3 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-emerald-950 font-bold text-sm sm:text-base shadow-lg">
-                      {i + 1}
-                    </div>
-
-                    {/* Icon */}
-                    <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-${step.color}-400/20 to-${step.color}-600/20 flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-500`}>
-                      <step.icon size={32} weight="duotone" className={`text-${step.color}-400 sm:w-9 sm:h-9`} />
-                    </div>
-
-                    <h3 className="text-xl sm:text-2xl font-bold mb-2">{step.title}</h3>
-                    <p className="text-sm sm:text-base text-emerald-100/60">{step.desc}</p>
+      {/* Workflow / How It Works Section */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="mb-12">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">{t.workflow.title}</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+          {/* Left: Workflow Visualization */}
+          <div className="bg-white p-6 sm:p-8 rounded-[2rem] shadow-sm border border-gray-100 relative overflow-hidden">
+            <div className="space-y-4 sm:space-y-6 relative z-10">
+              {t.workflow.steps.map((step, idx) => (
+                <div key={idx} className="flex items-center gap-4 group">
+                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                    {idx + 1}
                   </div>
-
-                  {/* Arrow between steps - Desktop */}
-                  {i < 3 && (
-                    <div className="hidden lg:flex absolute top-1/2 -right-4 -translate-y-1/2 z-10">
-                      <ArrowRight size={24} className="text-amber-400 animate-pulse" />
-                    </div>
-                  )}
+                  <div>
+                    <h4 className="font-bold text-gray-900">{step.title}</h4>
+                    <p className="text-sm text-gray-500">{step.desc}</p>
+                  </div>
                 </div>
               ))}
             </div>
+            {/* Decorative circle */}
+            <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-lime-300/20 rounded-full blur-3xl"></div>
           </div>
-        </div>
-      </section>
 
-      {/* Features Section */}
-      <section className="relative py-16 sm:py-24 px-4">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-12 sm:mb-16">
-            {t.features.title}
-          </h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
-            {[
-              { icon: CloudRain, title: t.features.feature1, desc: t.features.feature1Desc, gradient: 'from-blue-500 to-cyan-500' },
-              { icon: ChartLineUp, title: t.features.feature2, desc: t.features.feature2Desc, gradient: 'from-emerald-500 to-teal-500' },
-              { icon: Thermometer, title: t.features.feature3, desc: t.features.feature3Desc, gradient: 'from-orange-500 to-red-500' },
-              { icon: Medal, title: t.features.feature4, desc: t.features.feature4Desc, gradient: 'from-amber-500 to-yellow-500' },
-            ].map((feature, i) => (
-              <div
-                key={i}
-                className="group relative p-6 sm:p-8 rounded-3xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all duration-500 hover:scale-[1.02]"
-              >
-                <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-5 rounded-3xl transition-opacity duration-500`} />
-                
-                <div className="flex items-start gap-4 sm:gap-6">
-                  <div className={`flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center shadow-lg`}>
-                    <feature.icon size={28} weight="duotone" className="text-white sm:w-8 sm:h-8" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl sm:text-2xl font-bold mb-2">{feature.title}</h3>
-                    <p className="text-sm sm:text-base text-emerald-100/60">{feature.desc}</p>
-                  </div>
-                </div>
+          {/* Right: CTA Card */}
+          <div className="bg-emerald-500 rounded-[2rem] p-6 sm:p-8 md:p-12 text-white relative overflow-hidden flex flex-col justify-center text-center items-center">
+            <div className="relative z-10">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <UserCircle size={32} weight="duotone" />
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA Section */}
-      <section className="relative py-16 sm:py-24 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="relative p-8 sm:p-12 md:p-16 rounded-[2rem] sm:rounded-[3rem] bg-gradient-to-br from-amber-500/20 to-emerald-500/20 backdrop-blur-sm border border-white/10 text-center overflow-hidden">
-            {/* Background Glow */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-amber-400/20 rounded-full blur-3xl" />
-            
-            <div className="relative">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
-                {t.cta.title}
-              </h2>
-              <p className="text-lg sm:text-xl text-emerald-100/70 mb-8 sm:mb-10">
-                {t.cta.subtitle}
+              <h3 className="text-2xl sm:text-3xl font-bold mb-4">{t.workflow.ctaTitle}</h3>
+              <p className="text-emerald-50 mb-8 max-w-sm mx-auto text-sm sm:text-base">
+                {t.workflow.ctaSubtitle}
               </p>
-              <button className="group w-full sm:w-auto px-8 py-5 sm:px-12 sm:py-6 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-emerald-950 font-bold text-lg sm:text-xl rounded-2xl shadow-lg shadow-amber-500/30 hover:shadow-amber-400/50 transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center gap-3 mx-auto">
-                <UserPlus size={28} className="sm:w-8 sm:h-8" />
-                {t.cta.button}
+              <button className="bg-white text-emerald-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold hover:bg-lime-300 hover:text-emerald-900 transition-all w-full max-w-xs shadow-lg">
+                {t.workflow.ctaButton}
               </button>
             </div>
+            <img 
+              src="https://images.unsplash.com/photo-1592982537447-6f2a6a0c7c18?q=80&w=2070&auto=format&fit=crop" 
+              alt="Background pattern"
+              className="absolute inset-0 w-full h-full object-cover opacity-10 mix-blend-overlay"
+            />
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="relative py-8 sm:py-12 px-4 border-t border-white/10">
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Plant size={28} weight="duotone" className="text-amber-400 sm:w-8 sm:h-8" />
-            <span className="text-xl sm:text-2xl font-bold">আমার ফসল</span>
+      <footer className="bg-emerald-900 text-white pt-16 sm:pt-20 pb-8 sm:pb-10 px-4 sm:px-6 lg:px-8 mt-12">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 mb-12 sm:mb-16">
+            <div>
+              <h2 className="text-[15vw] sm:text-[12vw] leading-none font-bold text-lime-300 opacity-20 select-none">
+                আমার
+              </h2>
+              <h2 className="text-[15vw] sm:text-[12vw] leading-none font-bold text-white opacity-20 select-none -mt-2 sm:-mt-4 md:-mt-8">
+                ফসল
+              </h2>
+            </div>
+            <div className="flex flex-col justify-end">
+              <div className="flex flex-wrap gap-4 sm:gap-8 text-base sm:text-lg font-medium text-gray-300">
+                <a href="#" className="hover:text-lime-300 transition-colors">Instagram</a>
+                <a href="#" className="hover:text-lime-300 transition-colors">LinkedIn</a>
+                <a href="#" className="hover:text-lime-300 transition-colors">YouTube</a>
+              </div>
+              <p className="mt-6 sm:mt-8 text-gray-400 text-sm sm:text-base">
+                {t.footer.text}
+              </p>
+            </div>
           </div>
-          <p className="text-sm sm:text-base text-emerald-100/60 mb-2">{t.footer.tagline}</p>
-          <p className="text-xs sm:text-sm text-emerald-100/40">{t.footer.hackfest}</p>
-          <p className="text-xs sm:text-sm text-emerald-100/40 mt-2">Team SteveJobs - Alif, Yasin, Joydeep</p>
+          
+          <div className="border-t border-white/10 pt-6 sm:pt-8 flex flex-col md:flex-row justify-between items-center gap-2 text-xs sm:text-sm text-gray-400">
+            <p>{t.footer.copyright}</p>
+            <p>{t.footer.hackfest}</p>
+          </div>
         </div>
       </footer>
-
-      {/* Global Styles */}
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800;900&display=swap');
-        
-        * {
-          font-family: 'Noto Sans Bengali', system-ui, sans-serif;
-        }
-
-        @keyframes float {
-          0%, 100% {
-            transform: translateY(100vh) rotate(0deg);
-            opacity: 0;
-          }
-          10% {
-            opacity: 0.2;
-          }
-          90% {
-            opacity: 0.2;
-          }
-          100% {
-            transform: translateY(-100px) rotate(360deg);
-            opacity: 0;
-          }
-        }
-
-        @keyframes gradient {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
-        }
-
-        @keyframes scroll {
-          0%, 100% {
-            transform: translateY(0);
-            opacity: 1;
-          }
-          50% {
-            transform: translateY(4px);
-            opacity: 0.5;
-          }
-        }
-
-        .animate-float {
-          animation: float linear infinite;
-        }
-
-        .animate-gradient {
-          animation: gradient 3s ease infinite;
-        }
-
-        .animate-scroll {
-          animation: scroll 1.5s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   );
 }
