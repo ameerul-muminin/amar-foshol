@@ -23,8 +23,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select';
+import AdvisoryPanel from './advisory-panel';
 import { formatTemperatureBn, formatPercentageBn, formatDateBn } from '@/lib/bangla-numbers';
 import { getDivisions, getDistrictsByDivision, getDistrictCoordinates } from '@/lib/locations';
+import { generateAdvisories, Advisory, saveAdvisoryHistory } from '@/lib/advisory-service';
 
 interface WeatherData {
   date: string;
@@ -40,14 +42,6 @@ interface LocationData {
   district: string;
   lat: number;
   lon: number;
-}
-
-interface Advisory {
-  type: 'warning' | 'info' | 'success';
-  titleBn: string;
-  messageBn: string;
-  actionBn: string;
-  icon: React.ReactNode;
 }
 
 export default function WeatherDisplay() {
@@ -111,7 +105,7 @@ export default function WeatherDisplay() {
       setWeatherData(forecasts);
 
       // Generate advisories
-      generateAdvisories(forecasts);
+      generateAdvisoriesFromWeather(forecasts);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'একটি ত্রুটি ঘটেছে');
       setWeatherData([]);
@@ -122,74 +116,15 @@ export default function WeatherDisplay() {
   };
 
   // Generate advisories based on weather conditions
-  const generateAdvisories = (forecasts: WeatherData[]) => {
-    const newAdvisories: Advisory[] = [];
-
-    // Check rain probability
-    const rainyDays = forecasts.filter((f) => f.rainProbability > 70).length;
-    if (rainyDays >= 3) {
-      newAdvisories.push({
-        type: 'warning',
-        titleBn: 'বৃষ্টির সতর্কতা',
-        messageBn: `আগামী ৫ দিনে ${rainyDays} দিন ৭০% এর বেশি বৃষ্টির সম্ভাবনা রয়েছে।`,
-        actionBn: 'আজই ধান কাটুন অথবা নিরাপদ জায়গায় ঢেকে রাখুন।',
-        icon: <CloudRain className="w-6 h-6" />,
-      });
-    }
-
-    // Check high temperature
-    const hotDays = forecasts.filter((f) => f.tempMax > 35).length;
-    if (hotDays > 0) {
-      newAdvisories.push({
-        type: 'info',
-        titleBn: 'উচ্চ তাপমাত্রা',
-        messageBn: `তাপমাত্রা ${forecasts[0].tempMax}°সে পর্যন্ত উঠবে।`,
-        actionBn: 'দিনের বেলা ছায়ায় রাখুন এবং বিকেলের দিকে ঢেকে দিন।',
-        icon: <Sun className="w-6 h-6" />,
-      });
-    }
-
-    // Check humidity
-    const humidDays = forecasts.filter((f) => f.humidity > 80).length;
-    if (humidDays > 0) {
-      newAdvisories.push({
-        type: 'warning',
-        titleBn: 'উচ্চ আর্দ্রতা',
-        messageBn: `আর্দ্রতা ${forecasts[0].humidity}% এর উপরে থাকবে।`,
-        actionBn: 'ফসল শুকানো কঠিন হবে, ভেন্টিলেশন সহ ঘরে রাখুন।',
-        icon: <Droplets className="w-6 h-6" />,
-      });
-    }
-
-    // Combined risk
-    const riskyDays = forecasts.filter(
-      (f) => f.rainProbability > 50 && f.humidity > 75
-    ).length;
-    if (riskyDays > 0) {
-      newAdvisories.push({
-        type: 'warning',
-        titleBn: 'সর্বোচ্চ ঝুঁকি',
-        messageBn: `বৃষ্টি এবং আর্দ্রতা দুটোই বেশি থাকবে।`,
-        actionBn: 'পাটের বস্তা উঁচু এবং বাতাসপূর্ণ জায়গায় রাখুন।',
-        icon: <AlertCircle className="w-6 h-6" />,
-      });
-    }
-
-    // Clear weather advisory
-    const clearDays = forecasts.filter(
-      (f) => f.rainProbability < 30 && f.tempMax < 35
-    ).length;
-    if (clearDays >= 3) {
-      newAdvisories.push({
-        type: 'success',
-        titleBn: 'উপযুক্ত সময়',
-        messageBn: 'আবহাওয়া ভালো রয়েছে।',
-        actionBn: 'এখনই ফসল শুকানোর সেরা সময়।',
-        icon: <CheckCircle className="w-6 h-6" />,
-      });
-    }
-
-    setAdvisories(newAdvisories);
+  const generateAdvisoriesFromWeather = (forecasts: WeatherData[]) => {
+    const advs = generateAdvisories(forecasts);
+    
+    // Save all new advisories to history
+    advs.forEach((adv) => {
+      saveAdvisoryHistory(adv);
+    });
+    
+    setAdvisories(advs);
   };
 
   // Determine weather icon based on rain probability
@@ -331,82 +266,9 @@ export default function WeatherDisplay() {
           </Card>
         )}
 
-        {/* Advisories */}
-        {advisories.length > 0 && !loading && (
-          <div className="mb-8 animate-fade-in" style={{ animationDelay: '0.3s' }}>
-            <h2 className="text-2xl font-bold text-emerald-900 mb-4 flex items-center gap-2">
-              <AlertCircle className="w-6 h-6" />
-              কৃষি পরামর্শ
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {advisories.map((advisory, idx) => (
-                <Card
-                  key={idx}
-                  className={`border-2 shadow-lg overflow-hidden transition-all hover:scale-105 ${
-                    advisory.type === 'warning'
-                      ? 'border-red-300 bg-gradient-to-br from-red-50 to-orange-50'
-                      : advisory.type === 'success'
-                      ? 'border-green-300 bg-gradient-to-br from-green-50 to-emerald-50'
-                      : 'border-blue-300 bg-gradient-to-br from-blue-50 to-cyan-50'
-                  }`}
-                >
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <div
-                        className={`p-2 rounded-lg ${
-                          advisory.type === 'warning'
-                            ? 'bg-red-200'
-                            : advisory.type === 'success'
-                            ? 'bg-green-200'
-                            : 'bg-blue-200'
-                        }`}
-                      >
-                        {advisory.icon}
-                      </div>
-                      <span
-                        className={
-                          advisory.type === 'warning'
-                            ? 'text-red-900'
-                            : advisory.type === 'success'
-                            ? 'text-green-900'
-                            : 'text-blue-900'
-                        }
-                      >
-                        {advisory.titleBn}
-                      </span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <p
-                      className={
-                        advisory.type === 'warning'
-                          ? 'text-red-800'
-                          : advisory.type === 'success'
-                          ? 'text-green-800'
-                          : 'text-blue-800'
-                      }
-                    >
-                      {advisory.messageBn}
-                    </p>
-                    <div className="pt-2 border-t">
-                      <p className="text-sm font-semibold text-gray-600 mb-1">পদক্ষেপ:</p>
-                      <p
-                        className={
-                          advisory.type === 'warning'
-                            ? 'text-red-700 font-medium'
-                            : advisory.type === 'success'
-                            ? 'text-green-700 font-medium'
-                            : 'text-blue-700 font-medium'
-                        }
-                      >
-                        {advisory.actionBn}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
+        {/* Advisories Panel */}
+        {!loading && (
+          <AdvisoryPanel advisories={advisories} showHistory={true} />
         )}
 
         {/* 5-Day Forecast */}
