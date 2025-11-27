@@ -98,17 +98,16 @@ export default function WeatherDisplay() {
         lon: coords?.lon || 0,
       });
 
-      // Process weather data
-      const forecasts: WeatherData[] = [];
-      for (let i = 0; i < data.daily.time.length; i++) {
-        forecasts.push({
-          date: data.daily.time[i],
-          tempMax: data.daily.temperature_2m_max[i],
-          tempMin: data.daily.temperature_2m_min[i],
-          humidity: data.daily.relative_humidity_2m_max[i],
-          rainProbability: data.daily.precipitation_probability_max[i],
-        });
-      }
+      // Process weather data from the API response
+      // The API returns { location, forecasts, lastUpdated }
+      const forecasts: WeatherData[] = data.forecasts.map((f: any) => ({
+        date: f.date,
+        tempMax: f.tempMax,
+        tempMin: f.tempMin,
+        humidity: f.humidity,
+        rainProbability: f.rainProbability,
+      }));
+      
       setWeatherData(forecasts);
 
       // Generate advisories
