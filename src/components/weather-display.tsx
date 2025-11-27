@@ -142,14 +142,14 @@ export default function WeatherDisplay() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-2 sm:p-4 md:p-6 lg:p-8 overflow-x-hidden">
       {/* Animated background orbs */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
         <div className="absolute top-20 right-20 w-96 h-96 bg-emerald-200/20 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-20 left-20 w-96 h-96 bg-blue-200/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
       </div>
 
-      <div className="max-w-6xl mx-auto">
+      <div className="w-full max-w-7xl mx-auto px-0">
         {/* Header */}
         <div className="mb-8 animate-fade-in">
           <h1 className="text-4xl md:text-5xl font-bold text-emerald-900 mb-2">আবহাওয়া পূর্বাভাস</h1>
@@ -233,32 +233,32 @@ export default function WeatherDisplay() {
 
         {/* Location Info */}
         {locationData && !loading && (
-          <Card className="mb-8 border-2 border-emerald-300 shadow-lg bg-gradient-to-r from-emerald-50 to-blue-50 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="flex items-center gap-3">
-                  <MapPin className="w-6 h-6 text-emerald-600" />
-                  <div>
-                    <p className="text-sm text-gray-600">অবস্থান</p>
-                    <p className="text-lg font-semibold text-emerald-900">{locationData.name}</p>
+          <Card className="mb-6 sm:mb-8 border-2 border-emerald-300 shadow-lg bg-gradient-to-r from-emerald-50 to-blue-50 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+            <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                <div className="flex items-center gap-3 min-w-0">
+                  <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm text-gray-600">অবস্থান</p>
+                    <p className="text-sm sm:text-lg font-semibold text-emerald-900 truncate">{locationData.name}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold">
-                    {locationData.lat.toFixed(2).replace('.', '°')}
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-xs sm:text-sm flex-shrink-0">
+                    {locationData.lat.toFixed(1)}°
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">অক্ষাংশ</p>
-                    <p className="text-sm font-semibold text-blue-900">{locationData.lat.toFixed(4)}°</p>
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm text-gray-600">অক্ষাংশ</p>
+                    <p className="text-xs sm:text-sm font-semibold text-blue-900 truncate">{locationData.lat.toFixed(4)}°</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white font-bold">
-                    {locationData.lon.toFixed(2).replace('.', '°')}
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs sm:text-sm flex-shrink-0">
+                    {locationData.lon.toFixed(1)}°
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">দ্রাঘিমাংশ</p>
-                    <p className="text-sm font-semibold text-purple-900">{locationData.lon.toFixed(4)}°</p>
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm text-gray-600">দ্রাঘিমাংশ</p>
+                    <p className="text-xs sm:text-sm font-semibold text-purple-900 truncate">{locationData.lon.toFixed(4)}°</p>
                   </div>
                 </div>
               </div>
@@ -278,7 +278,7 @@ export default function WeatherDisplay() {
               <Calendar className="w-6 h-6" />
               ৫-দিনের পূর্বাভাস
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 w-full">
               {weatherData.map((day, idx) => {
                 const date = new Date(day.date);
                 const dayName = ['রবি', 'সোম', 'মঙ্গল', 'বুধ', 'বৃহ', 'শুক্র', 'শনি'][date.getDay()];
@@ -289,59 +289,59 @@ export default function WeatherDisplay() {
                 return (
                   <Card
                     key={idx}
-                    className="border-2 border-emerald-200 shadow-lg hover:shadow-2xl transition-all hover:scale-105 overflow-hidden bg-gradient-to-b from-white to-emerald-50"
+                    className="border-2 border-emerald-200 shadow-lg hover:shadow-2xl transition-all hover:scale-105 overflow-hidden bg-gradient-to-b from-white to-emerald-50 h-full flex flex-col"
                   >
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-center text-sm font-bold text-emerald-900">
-                        <div>{dayName}</div>
-                        <div className="text-lg">{dayNum} {monthName}</div>
+                    <CardHeader className="pb-2 px-3 py-3">
+                      <CardTitle className="text-center text-xs sm:text-sm font-bold text-emerald-900">
+                        <div className="text-xs">{dayName}</div>
+                        <div className="text-sm sm:text-base font-bold mt-1">{dayNum} {monthName}</div>
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="space-y-2 px-3 py-3 flex-1 flex flex-col">
                       {/* Weather Icon */}
-                      <div className="flex justify-center py-2">
+                      <div className="flex justify-center py-1">
                         {getWeatherIcon(day.rainProbability, day.tempMax)}
                       </div>
 
                       {/* Temperature */}
                       <div className="space-y-1">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-600">সর্বোচ্চ</span>
-                          <span className="font-bold text-emerald-900 flex items-center gap-1">
-                            <Thermometer className="w-4 h-4" />
-                            {formatTemperatureBn(Math.round(day.tempMax))}
+                        <div className="flex items-center justify-between text-xs sm:text-sm gap-1 min-w-0">
+                          <span className="text-gray-600 truncate flex-shrink-0">সর্বোচ্চ</span>
+                          <span className="font-bold text-emerald-900 flex items-center gap-0.5 whitespace-nowrap flex-shrink-0">
+                            <Thermometer className="w-3 h-3" />
+                            <span>{formatTemperatureBn(Math.round(day.tempMax))}</span>
                           </span>
                         </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-600">সর্বনিম্ন</span>
-                          <span className="font-semibold text-blue-700 flex items-center gap-1">
-                            <Thermometer className="w-4 h-4" />
-                            {formatTemperatureBn(Math.round(day.tempMin))}
+                        <div className="flex items-center justify-between text-xs sm:text-sm gap-1 min-w-0">
+                          <span className="text-gray-600 truncate flex-shrink-0">সর্বনিম্ন</span>
+                          <span className="font-semibold text-blue-700 flex items-center gap-0.5 whitespace-nowrap flex-shrink-0">
+                            <Thermometer className="w-3 h-3" />
+                            <span>{formatTemperatureBn(Math.round(day.tempMin))}</span>
                           </span>
                         </div>
                       </div>
 
                       {/* Humidity */}
-                      <div className="pt-2 border-t">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-600 flex items-center gap-1">
-                            <Droplets className="w-4 h-4" />
-                            আর্দ্রতা
+                      <div className="pt-1 border-t">
+                        <div className="flex items-center justify-between text-xs sm:text-sm gap-1 min-w-0">
+                          <span className="text-gray-600 flex items-center gap-1 truncate flex-shrink-0">
+                            <Droplets className="w-3 h-3 flex-shrink-0" />
+                            <span className="truncate">আর্দ্রতা</span>
                           </span>
-                          <span className="font-semibold text-blue-600">
+                          <span className="font-semibold text-blue-600 whitespace-nowrap flex-shrink-0">
                             {formatPercentageBn(day.humidity)}
                           </span>
                         </div>
                       </div>
 
                       {/* Rain Probability */}
-                      <div className="pt-2 border-t">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-600 flex items-center gap-1">
-                            <CloudRain className="w-4 h-4" />
-                            বৃষ্টি
+                      <div className="pt-1 border-t">
+                        <div className="flex items-center justify-between text-xs sm:text-sm gap-1 min-w-0">
+                          <span className="text-gray-600 flex items-center gap-1 truncate flex-shrink-0">
+                            <CloudRain className="w-3 h-3 flex-shrink-0" />
+                            <span className="truncate">বৃষ্টি</span>
                           </span>
-                          <span className={`font-semibold ${day.rainProbability > 70 ? 'text-red-600' : day.rainProbability > 40 ? 'text-yellow-600' : 'text-green-600'}`}>
+                          <span className={`font-semibold whitespace-nowrap flex-shrink-0 ${day.rainProbability > 70 ? 'text-red-600' : day.rainProbability > 40 ? 'text-yellow-600' : 'text-green-600'}`}>
                             {formatPercentageBn(day.rainProbability)}
                           </span>
                         </div>
@@ -349,7 +349,7 @@ export default function WeatherDisplay() {
 
                       {/* Risk Indicator */}
                       {day.rainProbability > 70 && day.humidity > 80 && (
-                        <div className="mt-2 p-2 bg-red-100 border-l-4 border-red-500 rounded">
+                        <div className="mt-1 p-1.5 bg-red-100 border-l-4 border-red-500 rounded">
                           <p className="text-xs font-bold text-red-700">⚠️ উচ্চ ঝুঁকি</p>
                         </div>
                       )}
