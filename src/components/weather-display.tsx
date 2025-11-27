@@ -1,0 +1,394 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import {
+  Cloud,
+  CloudRain,
+  Sun,
+  Wind,
+  Droplets,
+  AlertCircle,
+  CheckCircle,
+  Thermometer,
+  Calendar,
+  MapPin,
+  Loader,
+} from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Button } from './ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
+import AdvisoryPanel from './advisory-panel';
+import { formatTemperatureBn, formatPercentageBn, formatDateBn } from '@/lib/bangla-numbers';
+import { getDivisions, getDistrictsByDivision, getDistrictCoordinates } from '@/lib/locations';
+import { generateAdvisories, Advisory, saveAdvisoryHistory } from '@/lib/advisory-service';
+
+interface WeatherData {
+  date: string;
+  tempMax: number;
+  tempMin: number;
+  humidity: number;
+  rainProbability: number;
+}
+
+interface LocationData {
+  name: string;
+  division: string;
+  district: string;
+  lat: number;
+  lon: number;
+}
+
+export default function WeatherDisplay() {
+  const [division, setDivision] = useState<string>('ঢাকা');
+  const [district, setDistrict] = useState<string>('ঢাকা');
+  const [weatherData, setWeatherData] = useState<WeatherData[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [locationData, setLocationData] = useState<LocationData | null>(null);
+  const [advisories, setAdvisories] = useState<Advisory[]>([]);
+
+  const divisions = getDivisions();
+  const districts = getDistrictsByDivision(division);
+
+  // Update district when division changes
+  useEffect(() => {
+    const firstDistrict = districts[0];
+    if (firstDistrict) {
+      setDistrict(firstDistrict);
+    }
+  }, [division, districts]);
+
+  // Fetch weather data
+  const fetchWeather = async () => {
+    if (!district || !division) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(
+        `/api/weather?division=${encodeURIComponent(division)}&district=${encodeURIComponent(district)}`
+      );
+
+      if (!response.ok) {
+        throw new Error('আবহাওয়া ডেটা লোড করতে ব্যর্থ হয়েছে');
+      }
+
+      const data = await response.json();
+
+      // Set location data
+      const coords = getDistrictCoordinates(division, district);
+      setLocationData({
+        name: `${district}, ${division}`,
+        division,
+        district,
+        lat: coords?.lat || 0,
+        lon: coords?.lon || 0,
+      });
+
+      // Process weather data from the API response
+      // The API returns { location, forecasts, lastUpdated }
+      const forecasts: WeatherData[] = data.forecasts.map((f: any) => ({
+        date: f.date,
+        tempMax: f.tempMax,
+        tempMin: f.tempMin,
+        humidity: f.humidity,
+        rainProbability: f.rainProbability,
+      }));
+      
+      setWeatherData(forecasts);
+
+      // Generate advisories
+      generateAdvisoriesFromWeather(forecasts);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'একটি ত্রুটি ঘটেছে');
+      setWeatherData([]);
+      setAdvisories([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Generate advisories based on weather conditions
+  const generateAdvisoriesFromWeather = (forecasts: WeatherData[]) => {
+    const advs = generateAdvisories(forecasts);
+    
+    // Save all new advisories to history
+    advs.forEach((adv) => {
+      saveAdvisoryHistory(adv);
+    });
+    
+    setAdvisories(advs);
+  };
+
+  // Determine weather icon based on rain probability
+  const getWeatherIcon = (rainProb: number, tempMax: number) => {
+    if (rainProb > 70) {
+      return <CloudRain className="w-8 h-8 text-blue-500" />;
+    }
+    if (rainProb > 40) {
+      return <Cloud className="w-8 h-8 text-gray-400" />;
+    }
+    if (tempMax > 35) {
+      return <Sun className="w-8 h-8 text-yellow-500" />;
+    }
+    return <Cloud className="w-8 h-8 text-gray-300" />;
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-2 sm:p-4 md:p-6 lg:p-8 overflow-x-hidden">
+      {/* Animated background orbs */}
+      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 right-20 w-96 h-96 bg-emerald-200/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 left-20 w-96 h-96 bg-blue-200/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+      </div>
+
+      <div className="w-full max-w-7xl mx-auto px-0">
+        {/* Header */}
+        <div className="mb-8 animate-fade-in">
+          <h1 className="text-4xl md:text-5xl font-bold text-emerald-900 mb-2">আবহাওয়া পূর্বাভাস</h1>
+          <p className="text-lg text-gray-600">আপনার এলাকার ৫-দিনের আবহাওয়া এবং কৃষি পরামর্শ</p>
+        </div>
+
+        {/* Location Selector */}
+        <Card className="mb-8 border-2 border-emerald-200 shadow-lg animate-fade-in" style={{ animationDelay: '0.1s' }}>
+          <CardHeader>
+            <CardTitle className="text-emerald-900 flex items-center gap-2">
+              <MapPin className="w-5 h-5" />
+              আপনার এলাকা নির্বাচন করুন
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              {/* Division Select */}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">বিভাগ</label>
+                <Select value={division} onValueChange={setDivision}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {divisions.map((div) => (
+                      <SelectItem key={div} value={div}>
+                        {div}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* District Select */}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">জেলা</label>
+                <Select value={district} onValueChange={setDistrict}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {districts.map((dist) => (
+                      <SelectItem key={dist} value={dist}>
+                        {dist}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Fetch Button */}
+              <div className="flex items-end">
+                <Button
+                  onClick={fetchWeather}
+                  disabled={loading}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold h-10 transition-all hover:scale-105"
+                >
+                  {loading ? (
+                    <>
+                      <Loader className="w-4 h-4 mr-2 animate-spin" />
+                      লোড হচ্ছে...
+                    </>
+                  ) : (
+                    'আবহাওয়া দেখুন'
+                  )}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Error Message */}
+        {error && (
+          <Card className="mb-8 border-2 border-red-200 bg-red-50 animate-fade-in">
+            <CardContent className="pt-6 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+              <p className="text-red-800">{error}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Location Info */}
+        {locationData && !loading && (
+          <Card className="mb-6 sm:mb-8 border-2 border-emerald-300 shadow-lg bg-gradient-to-r from-emerald-50 to-blue-50 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+            <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                <div className="flex items-center gap-3 min-w-0">
+                  <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm text-gray-600">অবস্থান</p>
+                    <p className="text-sm sm:text-lg font-semibold text-emerald-900 truncate">{locationData.name}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-xs sm:text-sm flex-shrink-0">
+                    {locationData.lat.toFixed(1)}°
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm text-gray-600">অক্ষাংশ</p>
+                    <p className="text-xs sm:text-sm font-semibold text-blue-900 truncate">{locationData.lat.toFixed(4)}°</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs sm:text-sm flex-shrink-0">
+                    {locationData.lon.toFixed(1)}°
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm text-gray-600">দ্রাঘিমাংশ</p>
+                    <p className="text-xs sm:text-sm font-semibold text-purple-900 truncate">{locationData.lon.toFixed(4)}°</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Advisories Panel */}
+        {!loading && (
+          <AdvisoryPanel advisories={advisories} showHistory={true} />
+        )}
+
+        {/* 5-Day Forecast */}
+        {weatherData.length > 0 && !loading && (
+          <div className="animate-fade-in" style={{ animationDelay: '0.4s' }}>
+            <h2 className="text-2xl font-bold text-emerald-900 mb-4 flex items-center gap-2">
+              <Calendar className="w-6 h-6" />
+              ৫-দিনের পূর্বাভাস
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 w-full">
+              {weatherData.map((day, idx) => {
+                const date = new Date(day.date);
+                const dayName = ['রবি', 'সোম', 'মঙ্গল', 'বুধ', 'বৃহ', 'শুক্র', 'শনি'][date.getDay()];
+                const dayNum = String(date.getDate()).padStart(2, '0');
+                const monthNames = ['জানু', 'ফেব্রু', 'মার্চ', 'এপ্রি', 'মে', 'জুন', 'জুল', 'আগ', 'সেপ্ট', 'অক্টো', 'নভে', 'ডিসে'];
+                const monthName = monthNames[date.getMonth()];
+
+                return (
+                  <Card
+                    key={idx}
+                    className="border-2 border-emerald-200 shadow-lg hover:shadow-2xl transition-all hover:scale-105 overflow-hidden bg-gradient-to-b from-white to-emerald-50 h-full flex flex-col"
+                  >
+                    <CardHeader className="pb-2 px-3 py-3">
+                      <CardTitle className="text-center text-xs sm:text-sm font-bold text-emerald-900">
+                        <div className="text-xs">{dayName}</div>
+                        <div className="text-sm sm:text-base font-bold mt-1">{dayNum} {monthName}</div>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 px-3 py-3 flex-1 flex flex-col">
+                      {/* Weather Icon */}
+                      <div className="flex justify-center py-1">
+                        {getWeatherIcon(day.rainProbability, day.tempMax)}
+                      </div>
+
+                      {/* Temperature */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-xs sm:text-sm gap-1 min-w-0">
+                          <span className="text-gray-600 truncate flex-shrink-0">সর্বোচ্চ</span>
+                          <span className="font-bold text-emerald-900 flex items-center gap-0.5 whitespace-nowrap flex-shrink-0">
+                            <Thermometer className="w-3 h-3" />
+                            <span>{formatTemperatureBn(Math.round(day.tempMax))}</span>
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs sm:text-sm gap-1 min-w-0">
+                          <span className="text-gray-600 truncate flex-shrink-0">সর্বনিম্ন</span>
+                          <span className="font-semibold text-blue-700 flex items-center gap-0.5 whitespace-nowrap flex-shrink-0">
+                            <Thermometer className="w-3 h-3" />
+                            <span>{formatTemperatureBn(Math.round(day.tempMin))}</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Humidity */}
+                      <div className="pt-1 border-t">
+                        <div className="flex items-center justify-between text-xs sm:text-sm gap-1 min-w-0">
+                          <span className="text-gray-600 flex items-center gap-1 truncate flex-shrink-0">
+                            <Droplets className="w-3 h-3 flex-shrink-0" />
+                            <span className="truncate">আর্দ্রতা</span>
+                          </span>
+                          <span className="font-semibold text-blue-600 whitespace-nowrap flex-shrink-0">
+                            {formatPercentageBn(day.humidity)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Rain Probability */}
+                      <div className="pt-1 border-t">
+                        <div className="flex items-center justify-between text-xs sm:text-sm gap-1 min-w-0">
+                          <span className="text-gray-600 flex items-center gap-1 truncate flex-shrink-0">
+                            <CloudRain className="w-3 h-3 flex-shrink-0" />
+                            <span className="truncate">বৃষ্টি</span>
+                          </span>
+                          <span className={`font-semibold whitespace-nowrap flex-shrink-0 ${day.rainProbability > 70 ? 'text-red-600' : day.rainProbability > 40 ? 'text-yellow-600' : 'text-green-600'}`}>
+                            {formatPercentageBn(day.rainProbability)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Risk Indicator */}
+                      {day.rainProbability > 70 && day.humidity > 80 && (
+                        <div className="mt-1 p-1.5 bg-red-100 border-l-4 border-red-500 rounded">
+                          <p className="text-xs font-bold text-red-700">⚠️ উচ্চ ঝুঁকি</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {weatherData.length === 0 && !loading && !error && (
+          <Card className="border-2 border-gray-300 shadow-lg">
+            <CardContent className="pt-12 text-center pb-12">
+              <div className="text-6xl mb-4 animate-bounce">☁️</div>
+              <p className="text-xl text-gray-600 font-semibold mb-2">আবহাওয়া ডেটা লোড করুন</p>
+              <p className="text-gray-500">উপরে আপনার বিভাগ এবং জেলা নির্বাচন করে "আবহাওয়া দেখুন" বোতাম ক্লিক করুন</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      <style>{`
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.6s ease-out forwards;
+          opacity: 0;
+        }
+      `}</style>
+    </div>
+  );
+}
