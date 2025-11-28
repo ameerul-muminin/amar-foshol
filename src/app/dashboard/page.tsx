@@ -206,12 +206,15 @@ export default function DashboardPage() {
         <div className="mb-8">
           <h3 className="text-xl font-bold text-gray-900 mb-4">{text.quickActions}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <button className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-emerald-500 transition-all text-left group">
+            <button 
+              onClick={() => router.push('/weather-test')}
+              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-emerald-500 transition-all text-left group"
+            >
               <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 mb-4 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
                 <CloudRain size={24} weight="duotone" />
               </div>
               <h4 className="font-bold text-gray-900 mb-1">{text.weather}</h4>
-              <p className="text-sm text-gray-500">{text.comingSoon}</p>
+              <p className="text-sm text-gray-500">{lang === 'bn' ? 'আবহাওয়া দেখুন' : 'View weather'}</p>
             </button>
 
             <button 

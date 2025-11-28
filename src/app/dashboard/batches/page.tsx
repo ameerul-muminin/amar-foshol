@@ -14,7 +14,11 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  Globe
+  Globe,
+  DotsThreeVertical,
+  Trash,
+  Check,
+  X
 } from '@phosphor-icons/react';
 
 export default function BatchesListPage() {
@@ -25,6 +29,8 @@ export default function BatchesListPage() {
   const [stats, setStats] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'active' | 'completed' | 'lost'>('all');
+  const [menuOpen, setMenuOpen] = useState<string | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{batchId: string; action: 'completed' | 'lost' | 'delete'} | null>(null);
 
   const t = {
     bn: {
@@ -59,6 +65,16 @@ export default function BatchesListPage() {
         open_area: 'খোলা জায়গা',
         warehouse: 'গুদামঘর',
         indoor: 'ঘরের ভিতর'
+      },
+      actions: {
+        markCompleted: 'সম্পন্ন করুন',
+        markLost: 'হারানো চিহ্নিত করুন',
+        delete: 'মুছে ফেলুন',
+        confirm: 'নিশ্চিত করুন',
+        cancel: 'বাতিল',
+        confirmCompleted: 'এই ব্যাচ সম্পন্ন হিসাবে চিহ্নিত করতে চান?',
+        confirmLost: 'এই ব্যাচ হারানো হিসাবে চিহ্নিত করতে চান?',
+        confirmDelete: 'এই ব্যাচ মুছে ফেলতে চান?'
       }
     },
     en: {
@@ -93,6 +109,16 @@ export default function BatchesListPage() {
         open_area: 'Open Area',
         warehouse: 'Warehouse',
         indoor: 'Indoor Storage'
+      },
+      actions: {
+        markCompleted: 'Mark Completed',
+        markLost: 'Mark as Lost',
+        delete: 'Delete',
+        confirm: 'Confirm',
+        cancel: 'Cancel',
+        confirmCompleted: 'Mark this batch as completed?',
+        confirmLost: 'Mark this batch as lost?',
+        confirmDelete: 'Delete this batch permanently?'
       }
     }
   };
@@ -126,6 +152,46 @@ export default function BatchesListPage() {
       console.error('Error loading data:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleUpdateStatus = async (batchId: string, status: 'completed' | 'lost') => {
+    try {
+      const { updateBatchStatus, getFarmerBatches, getFarmerStats } = await import('@/lib/cropBatch');
+      await updateBatchStatus(batchId, status);
+      
+      // Reload data
+      if (farmer) {
+        const farmerBatches = await getFarmerBatches(farmer.id);
+        const farmerStats = await getFarmerStats(farmer.id);
+        setBatches(farmerBatches);
+        setStats(farmerStats);
+      }
+      
+      setConfirmAction(null);
+      setMenuOpen(null);
+    } catch (error) {
+      console.error('Error updating batch status:', error);
+    }
+  };
+
+  const handleDeleteBatch = async (batchId: string) => {
+    try {
+      const { deleteBatch, getFarmerBatches, getFarmerStats } = await import('@/lib/cropBatch');
+      await deleteBatch(batchId);
+      
+      // Reload data
+      if (farmer) {
+        const farmerBatches = await getFarmerBatches(farmer.id);
+        const farmerStats = await getFarmerStats(farmer.id);
+        setBatches(farmerBatches);
+        setStats(farmerStats);
+      }
+      
+      setConfirmAction(null);
+      setMenuOpen(null);
+    } catch (error) {
+      console.error('Error deleting batch:', error);
     }
   };
 
@@ -281,7 +347,7 @@ export default function BatchesListPage() {
             {filteredBatches.map((batch) => (
               <div
                 key={batch.id}
-                className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-emerald-500 transition-all cursor-pointer"
+                className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all relative"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
@@ -295,7 +361,65 @@ export default function BatchesListPage() {
                       </p>
                     </div>
                   </div>
-                  {getStatusIcon(batch.status)}
+                  
+                  <div className="flex items-center gap-2">
+                    {getStatusIcon(batch.status)}
+                    
+                    {/* Action Menu */}
+                    <div className="relative">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setMenuOpen(menuOpen === batch.id ? null : batch.id);
+                        }}
+                        className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                      >
+                        <DotsThreeVertical size={20} weight="bold" className="text-gray-500" />
+                      </button>
+                      
+                      {menuOpen === batch.id && (
+                        <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-10 min-w-[160px]">
+                          {batch.status === 'active' && (
+                            <>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setConfirmAction({ batchId: batch.id, action: 'completed' });
+                                  setMenuOpen(null);
+                                }}
+                                className="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-green-600"
+                              >
+                                <CheckCircle size={18} weight="duotone" />
+                                {text.actions.markCompleted}
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setConfirmAction({ batchId: batch.id, action: 'lost' });
+                                  setMenuOpen(null);
+                                }}
+                                className="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-orange-600"
+                              >
+                                <XCircle size={18} weight="duotone" />
+                                {text.actions.markLost}
+                              </button>
+                            </>
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setConfirmAction({ batchId: batch.id, action: 'delete' });
+                              setMenuOpen(null);
+                            }}
+                            className="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-red-600"
+                          >
+                            <Trash size={18} weight="duotone" />
+                            {text.actions.delete}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -335,6 +459,63 @@ export default function BatchesListPage() {
                 )}
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Confirmation Modal */}
+        {confirmAction && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
+              <div className="text-center mb-6">
+                {confirmAction.action === 'completed' && (
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle size={32} weight="duotone" className="text-green-600" />
+                  </div>
+                )}
+                {confirmAction.action === 'lost' && (
+                  <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <XCircle size={32} weight="duotone" className="text-orange-600" />
+                  </div>
+                )}
+                {confirmAction.action === 'delete' && (
+                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Trash size={32} weight="duotone" className="text-red-600" />
+                  </div>
+                )}
+                <p className="text-gray-900 font-medium">
+                  {confirmAction.action === 'completed' && text.actions.confirmCompleted}
+                  {confirmAction.action === 'lost' && text.actions.confirmLost}
+                  {confirmAction.action === 'delete' && text.actions.confirmDelete}
+                </p>
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setConfirmAction(null)}
+                  className="flex-1 px-4 py-3 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                >
+                  {text.actions.cancel}
+                </button>
+                <button
+                  onClick={() => {
+                    if (confirmAction.action === 'delete') {
+                      handleDeleteBatch(confirmAction.batchId);
+                    } else {
+                      handleUpdateStatus(confirmAction.batchId, confirmAction.action);
+                    }
+                  }}
+                  className={`flex-1 px-4 py-3 rounded-xl text-white font-medium transition-colors ${
+                    confirmAction.action === 'completed' 
+                      ? 'bg-green-500 hover:bg-green-600'
+                      : confirmAction.action === 'lost'
+                      ? 'bg-orange-500 hover:bg-orange-600'
+                      : 'bg-red-500 hover:bg-red-600'
+                  }`}
+                >
+                  {text.actions.confirm}
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </main>
