@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { divisions } from '@/lib/locations';
 import { toBanglaNumber, formatTemperatureBn, formatPercentageBn, formatDateBn } from '@/lib/bangla-numbers';
 import { 
@@ -60,6 +61,7 @@ export default function WeatherPage() {
   const [weatherData, setWeatherData] = useState<WeatherResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [advisories, setAdvisories] = useState<Advisory[]>([]);
+  const [hasShownToasts, setHasShownToasts] = useState(false);
 
   const currentDivision = divisions[selectedDivisionIndex];
   const currentDistricts = currentDivision.districts;
@@ -300,6 +302,56 @@ export default function WeatherPage() {
     }
 
     setAdvisories(newAdvisories);
+    
+    // Show toast notifications for each advisory with staggered timing
+    if (newAdvisories.length > 0) {
+      setHasShownToasts(true);
+      showAdvisoryToasts(newAdvisories);
+    }
+  };
+
+  // Function to show advisory toasts
+  const showAdvisoryToasts = (advisoryList: Advisory[]) => {
+    advisoryList.forEach((advisory, index) => {
+      setTimeout(() => {
+        const title = lang === 'bn' ? advisory.titleBn : advisory.titleEn;
+        const message = lang === 'bn' ? advisory.messageBn : advisory.messageEn;
+        const action = lang === 'bn' ? advisory.actionBn : advisory.actionEn;
+        const actionLabel = lang === 'bn' ? 'করণীয়' : 'Action';
+        
+        const toastContent = (
+          <div className="space-y-2">
+            <p className="text-sm">{message}</p>
+            <div className={`text-xs p-2 rounded-lg ${
+              advisory.type === 'warning' 
+                ? 'bg-amber-100 text-amber-900' 
+                : advisory.type === 'success' 
+                ? 'bg-emerald-100 text-emerald-900' 
+                : 'bg-blue-100 text-blue-900'
+            }`}>
+              <span className="font-bold">{actionLabel}:</span> {action}
+            </div>
+          </div>
+        );
+
+        if (advisory.type === 'warning') {
+          toast.warning(title, {
+            description: toastContent,
+            duration: 10000,
+          });
+        } else if (advisory.type === 'success') {
+          toast.success(title, {
+            description: toastContent,
+            duration: 8000,
+          });
+        } else {
+          toast.info(title, {
+            description: toastContent,
+            duration: 8000,
+          });
+        }
+      }, index * 1500); // Stagger each toast by 1.5 seconds
+    });
   };
 
   const handleDivisionChange = (divIndex: number) => {
@@ -597,69 +649,21 @@ export default function WeatherPage() {
               </div>
             </div>
 
-            {/* Farming Advisories */}
-            {advisories.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 mt-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <Plant size={20} weight="duotone" className="text-emerald-600" />
-                  {text.farmingAdvice}
-                </h3>
-                
-                <div className="space-y-4">
-                  {advisories.map((advisory, index) => (
-                    <div
-                      key={index}
-                      className={`rounded-xl p-4 border-l-4 ${
-                        advisory.type === 'warning'
-                          ? 'bg-amber-50 border-amber-500'
-                          : advisory.type === 'success'
-                          ? 'bg-emerald-50 border-emerald-500'
-                          : 'bg-blue-50 border-blue-500'
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className={`p-2 rounded-lg flex-shrink-0 ${
-                          advisory.type === 'warning'
-                            ? 'bg-amber-100'
-                            : advisory.type === 'success'
-                            ? 'bg-emerald-100'
-                            : 'bg-blue-100'
-                        }`}>
-                          {advisory.icon}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className={`font-bold mb-1 ${
-                            advisory.type === 'warning'
-                              ? 'text-amber-900'
-                              : advisory.type === 'success'
-                              ? 'text-emerald-900'
-                              : 'text-blue-900'
-                          }`}>
-                            {lang === 'bn' ? advisory.titleBn : advisory.titleEn}
-                          </h4>
-                          <p className={`text-sm mb-2 ${
-                            advisory.type === 'warning'
-                              ? 'text-amber-800'
-                              : advisory.type === 'success'
-                              ? 'text-emerald-800'
-                              : 'text-blue-800'
-                          }`}>
-                            {lang === 'bn' ? advisory.messageBn : advisory.messageEn}
-                          </p>
-                          <div className={`text-sm font-medium p-2 rounded-lg ${
-                            advisory.type === 'warning'
-                              ? 'bg-amber-100 text-amber-900'
-                              : advisory.type === 'success'
-                              ? 'bg-emerald-100 text-emerald-900'
-                              : 'bg-blue-100 text-blue-900'
-                          }`}>
-                            <span className="font-bold">{text.action}:</span> {lang === 'bn' ? advisory.actionBn : advisory.actionEn}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            {/* Farming Advisories - Button to show again */}
+            {advisories.length > 0 && hasShownToasts && (
+              <div className="mt-6 text-center">
+                <button
+                  onClick={() => showAdvisoryToasts(advisories)}
+                  className="inline-flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-medium shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 transition-all transform hover:scale-105"
+                >
+                  <Plant size={20} weight="duotone" />
+                  {lang === 'bn' ? '🌾 কৃষি পরামর্শ আবার দেখুন' : '🌾 Show Farming Advice Again'}
+                </button>
+                <p className="text-xs text-gray-500 mt-2">
+                  {lang === 'bn' 
+                    ? `${advisories.length}টি পরামর্শ পাওয়া গেছে` 
+                    : `${advisories.length} advice${advisories.length > 1 ? 's' : ''} available`}
+                </p>
               </div>
             )}
           </>

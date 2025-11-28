@@ -38,6 +38,7 @@ export const metadata: Metadata = {
     description: "Smart farming solution for Bangladeshi farmers",
   },
 };
+import { Toaster } from 'sonner';
 
 export default function RootLayout({
   children,
@@ -58,6 +59,18 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
+        <Toaster 
+          position="bottom-center"
+          richColors
+          expand={true}
+          duration={8000}
+          closeButton
+          toastOptions={{
+            style: {
+              fontSize: '14px',
+            },
+          }}
+        />
       </body>
     </html>
   );
