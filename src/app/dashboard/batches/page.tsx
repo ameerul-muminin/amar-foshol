@@ -19,6 +19,7 @@ import {
   Trash,
   Check,
   X
+  ,DownloadSimple
 } from '@phosphor-icons/react';
 
 export default function BatchesListPage() {
@@ -128,6 +129,36 @@ export default function BatchesListPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Export handlers
+  const handleExportCSV = async () => {
+    try {
+      if (!farmer) return alert(lang === 'bn' ? 'প্রথমে লগইন করুন' : 'Please login first');
+      const { batchesToCSV, downloadCSV } = await import('@/lib/export');
+      const { getFarmerBatches } = await import('@/lib/cropBatch');
+      const data = await getFarmerBatches(farmer.id);
+      const csv = batchesToCSV(data, lang);
+      const filename = `batches_${farmer.id}_${Date.now()}.csv`;
+      downloadCSV(csv, filename);
+    } catch (error) {
+      console.error('Export CSV error:', error);
+      alert(lang === 'bn' ? 'এক্সপোর্ট ব্যর্থ হয়েছে' : 'Export failed');
+    }
+  };
+
+  const handleExportJSON = async () => {
+    try {
+      if (!farmer) return alert(lang === 'bn' ? 'প্রথমে লগইন করুন' : 'Please login first');
+      const { downloadJSON } = await import('@/lib/export');
+      const { getFarmerBatches } = await import('@/lib/cropBatch');
+      const data = await getFarmerBatches(farmer.id);
+      const filename = `batches_${farmer.id}_${Date.now()}.json`;
+      downloadJSON(data, filename);
+    } catch (error) {
+      console.error('Export JSON error:', error);
+      alert(lang === 'bn' ? 'এক্সপোর্ট ব্যর্থ হয়েছে' : 'Export failed');
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -256,6 +287,26 @@ export default function BatchesListPage() {
                 <Globe size={14} weight="bold" />
                 {lang === 'bn' ? 'EN' : 'BN'}
               </button>
+              {/* Export buttons */}
+              <div className="hidden sm:flex items-center gap-2">
+                <button
+                  onClick={handleExportCSV}
+                  title={lang === 'bn' ? 'CSV এক্সপোর্ট' : 'Export CSV'}
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                >
+                  <DownloadSimple size={16} />
+                  <span className="text-sm">CSV</span>
+                </button>
+
+                <button
+                  onClick={handleExportJSON}
+                  title={lang === 'bn' ? 'JSON এক্সপোর্ট' : 'Export JSON'}
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                >
+                  <DownloadSimple size={16} />
+                  <span className="text-sm">JSON</span>
+                </button>
+              </div>
               <button
                 onClick={() => router.push('/dashboard/batches/new')}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 transition-colors font-medium shadow-lg shadow-emerald-500/20"
@@ -519,6 +570,26 @@ export default function BatchesListPage() {
           </div>
         )}
       </main>
+
+      {/* Mobile export bar */}
+      <div className="sm:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+        <div className="bg-white rounded-full shadow-lg border border-gray-100 px-3 py-2 flex items-center gap-2">
+          <button
+            onClick={handleExportCSV}
+            className="px-3 py-2 rounded-full bg-emerald-500 text-white text-sm font-medium"
+            title={lang === 'bn' ? 'CSV এক্সপোর্ট' : 'Export CSV'}
+          >
+            CSV
+          </button>
+          <button
+            onClick={handleExportJSON}
+            className="px-3 py-2 rounded-full bg-white border border-gray-200 text-gray-700 text-sm font-medium"
+            title={lang === 'bn' ? 'JSON এক্সপোর্ট' : 'Export JSON'}
+          >
+            JSON
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
