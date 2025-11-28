@@ -150,8 +150,8 @@ export default function NewBatchPage() {
 
   const loadDistricts = async () => {
     try {
-      const { getDistrictsByDivision } = await import('@/lib/locations');
-      const districts = getDistrictsByDivision(formData.division);
+      const { getDistrictsByDivisionFull } = await import('@/lib/locations');
+      const districts = getDistrictsByDivisionFull(formData.division);
       setAvailableDistricts(districts);
     } catch (error) {
       console.error('Error loading districts:', error);

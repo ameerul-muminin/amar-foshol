@@ -19,6 +19,7 @@ export interface WeatherData {
   };
   forecasts: WeatherForecast[];
   lastUpdated: Date;
+  isMockData?: boolean; // Flag to indicate if this is fallback/mock data
 }
 
 export interface WeatherAdvisory {

@@ -1,18 +1,23 @@
 'use client';
 
-import { useState } from 'react';
-import { getDivisions, getDistrictsByDivision } from '@/lib/locations';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { divisions } from '@/lib/locations';
 import { toBanglaNumber, formatTemperatureBn, formatPercentageBn, formatDateBn } from '@/lib/bangla-numbers';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Cloud, Droplets, Thermometer, Calendar, AlertCircle, CheckCircle, Wind, Sun, CloudRain } from 'lucide-react';
+import { 
+  ArrowLeft,
+  Globe,
+  CloudRain,
+  Sun,
+  Cloud,
+  Drop,
+  Thermometer,
+  Warning,
+  CheckCircle,
+  MapPin,
+  Calendar,
+  Wind
+} from '@phosphor-icons/react';
 
 interface WeatherResponse {
   location: {
@@ -28,23 +33,92 @@ interface WeatherResponse {
     rainProbability: number;
   }>;
   lastUpdated: string;
+  isMockData?: boolean;
 }
 
-export default function WeatherTestPage() {
-  const divisions = getDivisions();
-  const [selectedDivision, setSelectedDivision] = useState(divisions[0]);
-  const [selectedDistrict, setSelectedDistrict] = useState(
-    getDistrictsByDivision(divisions[0])[0]
-  );
+export default function WeatherPage() {
+  const router = useRouter();
+  const [lang, setLang] = useState<'bn' | 'en'>('bn');
+  const [selectedDivisionIndex, setSelectedDivisionIndex] = useState(0);
+  const [selectedDistrictIndex, setSelectedDistrictIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [weatherData, setWeatherData] = useState<WeatherResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const districts = getDistrictsByDivision(selectedDivision);
+  const currentDivision = divisions[selectedDivisionIndex];
+  const currentDistricts = currentDivision.districts;
 
-  const handleDivisionChange = (value: string) => {
-    setSelectedDivision(value);
-    setSelectedDistrict(getDistrictsByDivision(value)[0]);
+  // Translations
+  const t = {
+    bn: {
+      title: 'আবহাওয়া',
+      subtitle: 'আপনার এলাকার আবহাওয়া পূর্বাভাস',
+      selectLocation: 'অবস্থান নির্বাচন',
+      division: 'বিভাগ',
+      district: 'জেলা',
+      fetchWeather: 'আবহাওয়া দেখুন',
+      loading: 'লোড হচ্ছে...',
+      forecast: '৫ দিনের পূর্বাভাস',
+      maxTemp: 'সর্বোচ্চ',
+      minTemp: 'সর্বনিম্ন',
+      humidity: 'আর্দ্রতা',
+      rain: 'বৃষ্টি',
+      offlineMode: 'অফলাইন মোড',
+      offlineDesc: 'সার্ভারে সংযোগ করা যায়নি। অনুমানমূলক তথ্য দেখানো হচ্ছে।',
+      error: 'ত্রুটি',
+      emptyState: 'আপনার এলাকা নির্বাচন করে আবহাওয়া দেখুন',
+      locationInfo: 'অবস্থান তথ্য',
+      latitude: 'অক্ষাংশ',
+      longitude: 'দ্রাঘিমাংশ',
+      timezone: 'সময় অঞ্চল',
+      lastUpdated: 'আপডেট'
+    },
+    en: {
+      title: 'Weather',
+      subtitle: 'Weather forecast for your area',
+      selectLocation: 'Select Location',
+      division: 'Division',
+      district: 'District',
+      fetchWeather: 'View Weather',
+      loading: 'Loading...',
+      forecast: '5-Day Forecast',
+      maxTemp: 'Max',
+      minTemp: 'Min',
+      humidity: 'Humidity',
+      rain: 'Rain',
+      offlineMode: 'Offline Mode',
+      offlineDesc: 'Unable to connect to server. Showing estimated data.',
+      error: 'Error',
+      emptyState: 'Select your area to view weather',
+      locationInfo: 'Location Info',
+      latitude: 'Latitude',
+      longitude: 'Longitude',
+      timezone: 'Timezone',
+      lastUpdated: 'Updated'
+    }
+  };
+
+  const text = t[lang];
+
+  // Load saved language preference
+  useEffect(() => {
+    const loadLang = async () => {
+      try {
+        const { getCurrentFarmer } = await import('@/lib/auth');
+        const farmer = await getCurrentFarmer();
+        if (farmer) {
+          setLang(farmer.language);
+        }
+      } catch (error) {
+        console.error('Error loading language:', error);
+      }
+    };
+    loadLang();
+  }, []);
+
+  const handleDivisionChange = (divIndex: number) => {
+    setSelectedDivisionIndex(divIndex);
+    setSelectedDistrictIndex(0); // Reset to first district
     setWeatherData(null);
     setError(null);
   };
@@ -55,9 +129,12 @@ export default function WeatherTestPage() {
     setWeatherData(null);
 
     try {
+      const division = currentDivision.name;
+      const district = currentDistricts[selectedDistrictIndex].name;
+      
       const params = new URLSearchParams({
-        division: selectedDivision,
-        district: selectedDistrict,
+        division,
+        district,
       });
 
       const response = await fetch(`/api/weather?${params}`);
@@ -77,292 +154,271 @@ export default function WeatherTestPage() {
   };
 
   const getWeatherIcon = (temp: number, rain: number) => {
-    if (rain > 70) return <CloudRain className="w-8 h-8 text-blue-500" />;
-    if (temp > 32) return <Sun className="w-8 h-8 text-yellow-500" />;
-    return <Cloud className="w-8 h-8 text-gray-400" />;
+    if (rain > 70) return <CloudRain size={32} weight="duotone" className="text-blue-500" />;
+    if (temp > 32) return <Sun size={32} weight="duotone" className="text-yellow-500" />;
+    return <Cloud size={32} weight="duotone" className="text-gray-400" />;
+  };
+
+  const formatDate = (dateStr: string) => {
+    if (lang === 'bn') {
+      return formatDateBn(dateStr);
+    }
+    return new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  };
+
+  const formatTemp = (temp: number) => {
+    if (lang === 'bn') {
+      return formatTemperatureBn(temp);
+    }
+    return `${temp.toFixed(1)}°C`;
+  };
+
+  const formatPercent = (val: number) => {
+    if (lang === 'bn') {
+      return formatPercentageBn(val);
+    }
+    return `${val}%`;
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50 p-6 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-emerald-200 to-transparent rounded-full opacity-20 blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-blue-200 to-transparent rounded-full opacity-20 blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-      </div>
-
-      <div className="max-w-6xl mx-auto relative z-10">
-        {/* Header */}
-        <div className="text-center mb-12 animate-fade-in">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="relative">
-              <Cloud className="w-14 h-14 text-emerald-600 animate-bounce" />
-              <Sun className="w-6 h-6 text-yellow-500 absolute top-0 right-0 animate-spin" style={{ animationDuration: '3s' }} />
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center text-gray-600 transition-colors"
+              >
+                <ArrowLeft size={20} weight="bold" />
+              </button>
+              <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center text-white">
+                <CloudRain size={24} weight="fill" />
+              </div>
+              <div>
+                <h1 className="font-bold text-lg text-gray-900">{text.title}</h1>
+                <p className="text-xs text-gray-500">{text.subtitle}</p>
+              </div>
             </div>
-            <h1 className="text-5xl md:text-6xl font-black bg-gradient-to-r from-emerald-600 via-blue-600 to-purple-600 bg-clip-text text-transparent drop-shadow-lg">
-              আমার ফসল
-            </h1>
+
+            <button
+              onClick={() => setLang(prev => prev === 'bn' ? 'en' : 'bn')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 hover:border-emerald-500 transition-colors text-sm font-medium"
+            >
+              <Globe size={14} weight="bold" />
+              {lang === 'bn' ? 'EN' : 'BN'}
+            </button>
           </div>
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">আবহাওয়া পূর্বাভাস</h2>
-          <p className="text-gray-600 text-lg">সঠিক আবহাওয়া ডেটা দিয়ে আপনার ফসল রক্ষা করুন</p>
         </div>
+      </header>
 
-        {/* Main Content */}
-        <div className="grid lg:grid-cols-4 gap-6">
-          {/* Left Panel - Controls */}
-          <div className="lg:col-span-1">
-            <Card className="sticky top-6 border-2 border-emerald-200 shadow-lg hover:shadow-2xl transition-shadow duration-300 bg-white/95 backdrop-blur">
-              <CardHeader className="bg-gradient-to-r from-emerald-500 to-blue-500 text-white rounded-t-lg">
-                <CardTitle className="text-xl">📍 অবস্থান নির্বাচন</CardTitle>
-                <CardDescription className="text-emerald-50">আপনার এলাকা বেছে নিন</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4 pt-6">
-                {/* Division Selector */}
-                <div className="space-y-2 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-                  <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                    <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
-                    বিভাগ
-                  </label>
-                  <Select value={selectedDivision} onValueChange={handleDivisionChange}>
-                    <SelectTrigger className="border-2 border-emerald-300 hover:border-emerald-500 transition-colors">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {divisions.map((div) => (
-                        <SelectItem key={div} value={div}>
-                          {div}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Location Selection Card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <MapPin size={20} weight="duotone" className="text-emerald-600" />
+            {text.selectLocation}
+          </h3>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            {/* Division */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {text.division}
+              </label>
+              <select
+                value={selectedDivisionIndex}
+                onChange={(e) => handleDivisionChange(parseInt(e.target.value))}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors bg-white text-gray-900"
+              >
+                {divisions.map((div, index) => (
+                  <option key={div.name} value={index}>
+                    {lang === 'bn' ? div.nameBn : div.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-                {/* District Selector */}
-                <div className="space-y-2 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                  <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                    <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                    জেলা
-                  </label>
-                  <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
-                    <SelectTrigger className="border-2 border-blue-300 hover:border-blue-500 transition-colors">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {districts.map((dist) => (
-                        <SelectItem key={dist} value={dist}>
-                          {dist}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Fetch Button */}
-                <Button
-                  onClick={handleFetchWeather}
-                  disabled={loading}
-                  className="w-full mt-6 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-bold py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 transform hover:scale-105 active:scale-95"
-                  size="lg"
-                >
-                  {loading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      লোড হচ্ছে...
-                    </div>
-                  ) : (
-                    '🔍 আবহাওয়া দেখুন'
-                  )}
-                </Button>
-
-                {/* Instructions */}
-                {!weatherData && !error && (
-                  <div className="mt-6 p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border-l-4 border-blue-500 animate-fade-in">
-                    <p className="text-sm font-bold text-blue-900 mb-2">📖 ধাপগুলি:</p>
-                    <ol className="text-xs text-blue-800 space-y-1 list-decimal list-inside">
-                      <li>বিভাগ নির্বাচন করুন</li>
-                      <li>জেলা নির্বাচন করুন</li>
-                      <li>বোতাম ক্লিক করুন</li>
-                    </ol>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            {/* District */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {text.district}
+              </label>
+              <select
+                value={selectedDistrictIndex}
+                onChange={(e) => setSelectedDistrictIndex(parseInt(e.target.value))}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors bg-white text-gray-900"
+              >
+                {currentDistricts.map((dist, index) => (
+                  <option key={dist.name} value={index}>
+                    {lang === 'bn' ? dist.nameBn : dist.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          {/* Right Panel - Results */}
-          <div className="lg:col-span-3 space-y-6">
-            {/* Error Display */}
-            {error && (
-              <Card className="border-2 border-red-300 bg-gradient-to-r from-red-50 to-red-100 shadow-lg animate-fade-in">
-                <CardContent className="pt-6">
-                  <div className="flex gap-3">
-                    <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5 animate-bounce" />
-                    <div>
-                      <p className="font-bold text-red-900 text-lg">⚠️ ত্রুটি</p>
-                      <p className="text-red-700 text-sm mt-1">{error}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Location Info */}
-            {weatherData && (
+          {/* Fetch Button */}
+          <button
+            onClick={handleFetchWeather}
+            disabled={loading}
+            className="w-full sm:w-auto px-6 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+          >
+            {loading ? (
               <>
-                <Card className="border-2 border-emerald-200 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden bg-white/95 backdrop-blur animate-fade-in">
-                  <CardHeader className="bg-gradient-to-r from-emerald-500 to-green-500 text-white">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5" />
-                      📍 অবস্থান তথ্য
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {[
-                        { label: 'অক্ষাংশ', value: weatherData.location.latitude.toFixed(4), color: 'from-emerald-500' },
-                        { label: 'দ্রাঘিমাংশ', value: weatherData.location.longitude.toFixed(4), color: 'from-blue-500' },
-                        { label: 'সময় অঞ্চল', value: weatherData.location.timezone, color: 'from-purple-500' },
-                        { label: 'আপডেট সময়', value: new Date(weatherData.lastUpdated).toLocaleTimeString('bn-BD'), color: 'from-pink-500' },
-                      ].map((item, idx) => (
-                        <div key={idx} className={`p-4 bg-gradient-to-br ${item.color} to-transparent opacity-90 rounded-lg border border-white/20 hover:opacity-100 transition-opacity`}>
-                          <p className="text-xs text-gray-600 font-bold mb-1">{item.label}</p>
-                          <p className="text-base font-mono font-bold text-gray-900">{item.value}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* 5-Day Forecast */}
-                <Card className="border-2 border-blue-200 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden bg-white/95 backdrop-blur animate-fade-in" style={{ animationDelay: '0.1s' }}>
-                  <CardHeader className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Calendar className="w-5 h-5" />
-                      📅 ৫ দিনের পূর্বাভাস
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                      {weatherData.forecasts.map((forecast, index) => (
-                        <div
-                          key={index}
-                          className="group relative overflow-hidden bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-xl p-4 hover:border-emerald-400 hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer"
-                          style={{ animationDelay: `${index * 0.1}s` }}
-                        >
-                          {/* Background accent */}
-                          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-blue-500/0 group-hover:from-emerald-500/10 group-hover:to-blue-500/10 transition-colors" />
-
-                          <div className="relative space-y-3">
-                            {/* Weather Icon */}
-                            <div className="flex justify-center py-2">
-                              {getWeatherIcon(forecast.tempMax, forecast.rainProbability)}
-                            </div>
-
-                            {/* Date */}
-                            <div className="pb-2 border-b-2 border-gray-200 text-center">
-                              <p className="text-sm font-bold text-emerald-700">
-                                {formatDateBn(forecast.date)}
-                              </p>
-                            </div>
-
-                            {/* Temperature */}
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <Thermometer className="w-4 h-4 text-red-500" />
-                                <div className="flex-1">
-                                  <p className="text-xs text-gray-600 font-semibold">সর্বোচ্চ</p>
-                                  <p className="text-sm font-bold text-red-600">
-                                    {formatTemperatureBn(forecast.tempMax)}
-                                  </p>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center gap-2">
-                                <Wind className="w-4 h-4 text-blue-500" />
-                                <div className="flex-1">
-                                  <p className="text-xs text-gray-600 font-semibold">সর্বনিম্ন</p>
-                                  <p className="text-sm font-bold text-blue-600">
-                                    {formatTemperatureBn(forecast.tempMin)}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Humidity & Rain */}
-                            <div className="space-y-2 pt-2 border-t-2 border-gray-200">
-                              <div className="flex items-center gap-2">
-                                <Droplets className="w-4 h-4 text-cyan-500" />
-                                <div className="flex-1">
-                                  <p className="text-xs text-gray-600 font-semibold">আর্দ্রতা</p>
-                                  <p className="text-sm font-bold text-cyan-600">
-                                    {formatPercentageBn(forecast.humidity)}
-                                  </p>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center gap-2">
-                                <CloudRain className="w-4 h-4 text-slate-500" />
-                                <div className="flex-1">
-                                  <p className="text-xs text-gray-600 font-semibold">বৃষ্টি</p>
-                                  <p className="text-sm font-bold text-slate-600">
-                                    {formatPercentageBn(forecast.rainProbability)}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Raw JSON Data */}
-                <Card className="border-2 border-gray-300 shadow-lg overflow-hidden bg-white/95 backdrop-blur animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                  <CardHeader className="bg-gradient-to-r from-gray-700 to-black text-white">
-                    <CardTitle className="text-sm">💻 API Response (JSON)</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-xs font-mono max-h-64 overflow-y-auto border border-green-500">
-                      {JSON.stringify(weatherData, null, 2)}
-                    </pre>
-                  </CardContent>
-                </Card>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                {text.loading}
+              </>
+            ) : (
+              <>
+                <CloudRain size={20} weight="duotone" />
+                {text.fetchWeather}
               </>
             )}
-
-            {/* Empty State */}
-            {!weatherData && !loading && !error && (
-              <Card className="border-2 border-dashed border-gray-300 shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-gray-50 to-gray-100 animate-fade-in">
-                <CardContent className="pt-12 pb-12 text-center">
-                  <div className="relative w-24 h-24 mx-auto mb-4">
-                    <Cloud className="w-24 h-24 text-gray-300 animate-bounce" />
-                  </div>
-                  <p className="text-gray-600 font-bold text-lg">আপনার এলাকা নির্বাচন করুন এবং আবহাওয়া দেখুন</p>
-                  <p className="text-gray-500 text-sm mt-2">বাম পক্ষ থেকে শুরু করুন 👈</p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+          </button>
         </div>
-      </div>
 
-      {/* CSS for animations */}
-      <style jsx>{`
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.5s ease-out forwards;
-          opacity: 0;
-        }
-      `}</style>
+        {/* Offline Warning */}
+        {weatherData?.isMockData && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6 flex items-start gap-3">
+            <Warning size={24} weight="duotone" className="text-amber-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-amber-900">{text.offlineMode}</p>
+              <p className="text-sm text-amber-700">{text.offlineDesc}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Error Display */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6 flex items-start gap-3">
+            <Warning size={24} weight="duotone" className="text-red-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-red-900">{text.error}</p>
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Weather Data */}
+        {weatherData && (
+          <>
+            {/* Location Info */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <CheckCircle size={20} weight="duotone" className="text-emerald-600" />
+                {text.locationInfo}
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <p className="text-xs text-gray-500 mb-1">{text.latitude}</p>
+                  <p className="font-semibold text-gray-900">
+                    {lang === 'bn' 
+                      ? toBanglaNumber(weatherData.location.latitude.toFixed(4))
+                      : weatherData.location.latitude.toFixed(4)}
+                  </p>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <p className="text-xs text-gray-500 mb-1">{text.longitude}</p>
+                  <p className="font-semibold text-gray-900">
+                    {lang === 'bn'
+                      ? toBanglaNumber(weatherData.location.longitude.toFixed(4))
+                      : weatherData.location.longitude.toFixed(4)}
+                  </p>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <p className="text-xs text-gray-500 mb-1">{text.timezone}</p>
+                  <p className="font-semibold text-gray-900 text-sm">
+                    {lang === 'bn' ? 'এশিয়া/ঢাকা' : weatherData.location.timezone}
+                  </p>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <p className="text-xs text-gray-500 mb-1">{text.lastUpdated}</p>
+                  <p className="font-semibold text-gray-900 text-sm">
+                    {new Date(weatherData.lastUpdated).toLocaleTimeString(lang === 'bn' ? 'bn-BD' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 5-Day Forecast */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Calendar size={20} weight="duotone" className="text-blue-600" />
+                {text.forecast}
+              </h3>
+              
+              {/* Mobile: Vertical cards, Desktop: Horizontal cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                {weatherData.forecasts.map((forecast, index) => (
+                  <div
+                    key={index}
+                    className="bg-gradient-to-br from-gray-50 to-white border border-gray-100 rounded-2xl p-4 hover:shadow-md transition-shadow"
+                  >
+                    {/* Date */}
+                    <div className="text-center pb-3 border-b border-gray-100 mb-3">
+                      <p className="font-bold text-emerald-700">{formatDate(forecast.date)}</p>
+                    </div>
+
+                    {/* Weather Icon */}
+                    <div className="flex justify-center py-3">
+                      {getWeatherIcon(forecast.tempMax, forecast.rainProbability)}
+                    </div>
+
+                    {/* Temperature */}
+                    <div className="space-y-2 mb-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Thermometer size={16} weight="duotone" className="text-red-500" />
+                          <span className="text-xs text-gray-600">{text.maxTemp}</span>
+                        </div>
+                        <span className="font-bold text-red-600">{formatTemp(forecast.tempMax)}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Wind size={16} weight="duotone" className="text-blue-500" />
+                          <span className="text-xs text-gray-600">{text.minTemp}</span>
+                        </div>
+                        <span className="font-bold text-blue-600">{formatTemp(forecast.tempMin)}</span>
+                      </div>
+                    </div>
+
+                    {/* Humidity & Rain */}
+                    <div className="space-y-2 pt-3 border-t border-gray-100">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Drop size={16} weight="duotone" className="text-cyan-500" />
+                          <span className="text-xs text-gray-600">{text.humidity}</span>
+                        </div>
+                        <span className="font-semibold text-cyan-600">{formatPercent(forecast.humidity)}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <CloudRain size={16} weight="duotone" className="text-slate-500" />
+                          <span className="text-xs text-gray-600">{text.rain}</span>
+                        </div>
+                        <span className="font-semibold text-slate-600">{formatPercent(forecast.rainProbability)}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Empty State */}
+        {!weatherData && !loading && !error && (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 sm:p-12 text-center">
+            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Cloud size={40} weight="duotone" className="text-gray-400" />
+            </div>
+            <p className="text-gray-600 font-medium">{text.emptyState}</p>
+          </div>
+        )}
+      </main>
     </div>
   );
 }
