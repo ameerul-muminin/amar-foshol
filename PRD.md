@@ -272,6 +272,77 @@ const toBanglaNum = (num) => String(num).replace(/\d/g, (d) => bnDigits[d]);
 
 ---
 
+### A4: Prediction, Weather Integration, and Risk Forecasting
+
+**Purpose:** Estimate crop spoilage risk using weather trends + simple prediction logic.
+
+#### A4.1: Prediction Engine Logic
+
+- Compute **Estimated Time to Critical Loss (ETCL)**
+- Inputs:
+  - Continuous high humidity (> 75%)
+  - Continuous high temperature (> 33°C)
+  - Crop Type (Paddy)
+- Baseline ETCL = 120 hours
+- Adjustments:
+  - Humidity > 80% → −24 hours
+  - Temperature > 35°C → −18 hours
+  - Rain probability > 70% → −12 hours
+
+**Example Output (Bangla):**  
+"উচ্চ আর্দ্রতার কারণে ৭২ ঘন্টার মধ্যে ফসল নষ্ট হওয়ার ঝুঁকি রয়েছে। এখনই ঘরের ভিতরে বাতাস চলাচল নিশ্চিত করুন।"
+
+#### A4.2: 7-Day Mock Weather Integration
+
+- Uses mock data (Temperature, Humidity, Rain Probability)
+- Based on registered Division/District
+- Refines ETCL predictions
+
+#### A4.3: Risk Summary Output
+
+```
+High Risk of Aflatoxin Mold (ETCL: 72 hours)
+Weather indicates high humidity → Indoor aeration recommended.
+```
+
+---
+
+### A5: Basic Crop Health Scanner (AI Wrapper)
+
+**Purpose:** Let farmers upload pictures to classify crop health.
+
+#### A5.1: Image Upload
+
+- Upload from mobile
+- Client-side compression for speed
+
+#### A5.2: Pre-trained Model Integration
+
+- Use HuggingFace API / Teachable Machine
+- Output classes:
+  - Fresh
+  - Rotten
+
+#### A5.3: Output Examples
+
+```
+ফসলের অবস্থা: সতেজ 🌾
+পরামর্শ: স্বাভাবিকভাবে শুকাতে দিন।
+```
+
+```
+ফসলের অবস্থা: পচন শুরু ⚠️
+পরামর্শ: দ্রুত আলাদা করে রাখুন।
+```
+
+#### A5.4: Performance Requirements
+
+- Loads under **3 seconds** on low-end Android
+- Model size < 5MB
+- Lazy load on first use
+
+---
+
 ## Technical Specifications
 
 ### Tech Stack
@@ -527,6 +598,30 @@ GET https://api.open-meteo.com/v1/forecast
 | Loading states             | P1       | ⏳ Pending |
 | Error handling             | P1       | ⏳ Pending |
 
+### A4: Prediction & Risk Forecasting
+
+| Task                           | Priority | Status     |
+| ------------------------------ | -------- | ---------- |
+| ETCL calculation logic         | P0       | ⏳ Pending |
+| Weather-based risk adjustments | P0       | ⏳ Pending |
+| Risk summary UI (Bangla)       | P0       | ⏳ Pending |
+| 7-day weather integration      | P1       | ⏳ Pending |
+| Aflatoxin mold warnings        | P1       | ⏳ Pending |
+| Storage recommendations        | P1       | ⏳ Pending |
+
+### A5: Crop Health Scanner (AI)
+
+| Task                          | Priority | Status     |
+| ----------------------------- | -------- | ---------- |
+| Image upload UI               | P0       | ⏳ Pending |
+| Client-side image compression | P0       | ⏳ Pending |
+| HuggingFace/Teachable Machine | P0       | ⏳ Pending |
+| Fresh/Rotten classification   | P0       | ⏳ Pending |
+| Bangla result display         | P0       | ⏳ Pending |
+| Lazy loading optimization     | P1       | ⏳ Pending |
+| Model size < 5MB              | P1       | ⏳ Pending |
+| 3-second load target          | P1       | ⏳ Pending |
+
 ---
 
 ## Timeline & Milestones
@@ -602,6 +697,28 @@ GET https://api.open-meteo.com/v1/forecast
 - [ ] Weather data is cached
 - [ ] Shows loading state while fetching
 - [ ] Handles API errors gracefully
+
+### A4: Prediction & Risk Forecasting
+
+- [ ] Calculates ETCL (Estimated Time to Critical Loss)
+- [ ] Adjusts risk based on humidity > 80%
+- [ ] Adjusts risk based on temperature > 35°C
+- [ ] Adjusts risk based on rain probability > 70%
+- [ ] Displays risk summary in Bangla
+- [ ] Shows actionable recommendations
+- [ ] Warns about Aflatoxin mold risk
+- [ ] Works with 7-day weather data
+
+### A5: Crop Health Scanner
+
+- [ ] Can upload image from mobile camera/gallery
+- [ ] Client-side image compression works
+- [ ] Classifies crop as Fresh or Rotten
+- [ ] Displays result in Bangla with icon
+- [ ] Shows appropriate advice based on result
+- [ ] Loads under 3 seconds on low-end Android
+- [ ] Model size < 5MB
+- [ ] Lazy loads on first use
 
 ---
 
