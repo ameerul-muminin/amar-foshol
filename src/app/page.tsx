@@ -13,6 +13,9 @@ import {
   Database,
   CheckCircle,
   List,
+  Camera,
+  Leaf,
+  Warning,
 } from "@phosphor-icons/react";
 
 // Translations
@@ -84,6 +87,17 @@ const translations = {
         "Join thousands of farmers protecting their livelihood today.",
       ctaButton: "Register Now",
     },
+    scanner: {
+      title: "AI Crop Health Scanner",
+      subtitle: "Instantly check if your crop is fresh or rotten with a single photo",
+      fresh: "Fresh",
+      freshDesc: "Your crop looks healthy! Continue normal drying.",
+      rotten: "Rotten",
+      rottenDesc: "Spoilage detected! Separate immediately.",
+      cta: "Try Scanner",
+      badge: "AI Powered",
+      tip: "Take a clear photo of your crop to get instant health analysis",
+    },
     footer: {
       text: "Team SteveJobs. Built for EDU HackFest 2025.",
       copyright: "© 2025 Amar Foshol. All rights reserved.",
@@ -151,6 +165,17 @@ const translations = {
       ctaTitle: "রেজিস্ট্রেশন করুন",
       ctaSubtitle: "হাজারো কৃষক আজই তাদের জীবিকা রক্ষা করছে।",
       ctaButton: "এখনই নিবন্ধন করুন",
+    },
+    scanner: {
+      title: "AI ফসল স্বাস্থ্য স্ক্যানার",
+      subtitle: "একটি ছবি দিয়ে তাৎক্ষণিক জানুন আপনার ফসল সতেজ না পচা",
+      fresh: "সতেজ",
+      freshDesc: "আপনার ফসল স্বাস্থ্যকর! স্বাভাবিকভাবে শুকাতে দিন।",
+      rotten: "পচা",
+      rottenDesc: "পচন ধরা পড়েছে! এখনই আলাদা করুন।",
+      cta: "স্ক্যানার ব্যবহার করুন",
+      badge: "AI চালিত",
+      tip: "তাৎক্ষণিক স্বাস্থ্য বিশ্লেষণের জন্য আপনার ফসলের একটি স্পষ্ট ছবি তুলুন",
     },
     footer: {
       text: "টিম স্টিভজবস। EDU হ্যাকফেস্ট ২০২৫ এর জন্য তৈরি।",
@@ -257,7 +282,10 @@ export default function LandingPage() {
             >
               {t.nav.features}
             </a>
-            <button className="w-full bg-emerald-900 text-white px-5 py-2 rounded-full hover:bg-emerald-500 transition-colors">
+            <button 
+              onClick={() => (window.location.href = "/login")}
+              className="w-full bg-emerald-900 text-white px-5 py-2 rounded-full hover:bg-emerald-500 transition-colors"
+            >
               {t.nav.login}
             </button>
           </div>
@@ -365,7 +393,10 @@ export default function LandingPage() {
                 {t.features.subtitle}
               </p>
             </div>
-            <button className="bg-lime-300 text-emerald-900 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full font-bold hover:bg-white transition-colors flex items-center gap-2 text-sm sm:text-base">
+            <button 
+              onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+              className="bg-lime-300 text-emerald-900 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full font-bold hover:bg-white transition-colors flex items-center gap-2 text-sm sm:text-base"
+            >
               {t.features.viewAll} <ArrowRight size={18} weight="bold" />
             </button>
           </div>
@@ -491,6 +522,113 @@ export default function LandingPage() {
               alt="Background pattern"
               className="absolute inset-0 w-full h-full object-cover opacity-10 mix-blend-overlay"
             />
+          </div>
+        </div>
+      </section>
+
+      {/* A5: AI Crop Health Scanner Section */}
+      <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="bg-gradient-to-br from-amber-50 via-lime-50 to-emerald-50 rounded-[2.5rem] p-6 sm:p-10 md:p-16 relative overflow-hidden">
+          {/* Background decorative elements */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-lime-300/30 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-amber-300/20 rounded-full blur-3xl"></div>
+          
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            {/* Left: Content */}
+            <div>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-100 text-emerald-800 text-sm font-bold mb-6">
+                <Camera size={16} weight="bold" />
+                {t.scanner.badge}
+              </div>
+              
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
+                {t.scanner.title}
+              </h2>
+              
+              <p className="text-gray-600 text-lg mb-8 max-w-md">
+                {t.scanner.subtitle}
+              </p>
+              
+              {/* Fresh/Rotten indicators */}
+              <div className="space-y-4 mb-8">
+                <div className="flex items-start gap-4 p-4 bg-white rounded-2xl shadow-sm border border-emerald-100">
+                  <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 flex-shrink-0">
+                    <Leaf size={24} weight="duotone" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-emerald-800 text-lg">{t.scanner.fresh} 🌾</h4>
+                    <p className="text-gray-600 text-sm">{t.scanner.freshDesc}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-4 p-4 bg-white rounded-2xl shadow-sm border border-red-100">
+                  <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center text-red-600 flex-shrink-0">
+                    <Warning size={24} weight="duotone" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-red-800 text-lg">{t.scanner.rotten} ⚠️</h4>
+                    <p className="text-gray-600 text-sm">{t.scanner.rottenDesc}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <button
+                onClick={() => (window.location.href = "/register")}
+                className="bg-emerald-600 text-white px-8 py-4 rounded-full font-bold hover:bg-emerald-700 transition-all transform hover:-translate-y-1 shadow-lg shadow-emerald-500/30 flex items-center gap-2"
+              >
+                <Camera size={20} weight="bold" />
+                {t.scanner.cta}
+              </button>
+            </div>
+            
+            {/* Right: 3D Wheat Animation */}
+            <div className="relative flex justify-center items-center">
+              {/* 3D Wheat Container */}
+              <div className="relative w-64 h-80 sm:w-80 sm:h-96 perspective-1000">
+                {/* Glowing background */}
+                <div className="absolute inset-0 bg-gradient-to-t from-amber-400/40 to-transparent rounded-full blur-2xl animate-pulse"></div>
+                
+                {/* 3D Rotating Wheat */}
+                <div className="absolute inset-0 flex items-center justify-center animate-float">
+                  {/* Main wheat emoji with 3D effect */}
+                  <div className="relative transform-style-3d animate-rotate-y">
+                    <span className="text-[120px] sm:text-[160px] select-none drop-shadow-2xl filter">
+                      🌾
+                    </span>
+                    {/* Shadow underneath */}
+                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-20 h-4 bg-black/20 rounded-full blur-md"></div>
+                  </div>
+                </div>
+                
+                {/* Floating status badges */}
+                <div className="absolute top-4 right-0 sm:right-4 animate-bounce-slow">
+                  <div className="bg-emerald-500 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg flex items-center gap-2">
+                    <CheckCircle size={16} weight="fill" />
+                    {t.scanner.fresh}
+                  </div>
+                </div>
+                
+                <div className="absolute bottom-8 left-0 sm:left-4 animate-bounce-slow" style={{ animationDelay: '0.5s' }}>
+                  <div className="bg-red-500 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg flex items-center gap-2">
+                    <Warning size={16} weight="fill" />
+                    {t.scanner.rotten}
+                  </div>
+                </div>
+                
+                {/* Decorative particles */}
+                <div className="absolute top-1/4 left-8 w-3 h-3 bg-lime-400 rounded-full animate-ping"></div>
+                <div className="absolute top-1/2 right-8 w-2 h-2 bg-amber-400 rounded-full animate-ping" style={{ animationDelay: '0.3s' }}></div>
+                <div className="absolute bottom-1/4 left-12 w-2 h-2 bg-emerald-400 rounded-full animate-ping" style={{ animationDelay: '0.6s' }}></div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Tip at bottom */}
+          <div className="relative z-10 mt-8 pt-6 border-t border-gray-200/50 text-center">
+            <p className="text-gray-500 text-sm flex items-center justify-center gap-2">
+              <Camera size={16} />
+              {t.scanner.tip}
+            </p>
           </div>
         </div>
       </section>
