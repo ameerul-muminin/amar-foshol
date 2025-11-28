@@ -16,7 +16,11 @@ import {
   CheckCircle,
   MapPin,
   Calendar,
-  Wind
+  Wind,
+  Plant,
+  Leaf,
+  ShieldWarning,
+  Lightning
 } from '@phosphor-icons/react';
 
 interface WeatherResponse {
@@ -36,6 +40,17 @@ interface WeatherResponse {
   isMockData?: boolean;
 }
 
+interface Advisory {
+  type: 'warning' | 'info' | 'success';
+  titleBn: string;
+  titleEn: string;
+  messageBn: string;
+  messageEn: string;
+  actionBn: string;
+  actionEn: string;
+  icon: React.ReactNode;
+}
+
 export default function WeatherPage() {
   const router = useRouter();
   const [lang, setLang] = useState<'bn' | 'en'>('bn');
@@ -44,6 +59,7 @@ export default function WeatherPage() {
   const [loading, setLoading] = useState(false);
   const [weatherData, setWeatherData] = useState<WeatherResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [advisories, setAdvisories] = useState<Advisory[]>([]);
 
   const currentDivision = divisions[selectedDivisionIndex];
   const currentDistricts = currentDivision.districts;
@@ -71,7 +87,9 @@ export default function WeatherPage() {
       latitude: 'অক্ষাংশ',
       longitude: 'দ্রাঘিমাংশ',
       timezone: 'সময় অঞ্চল',
-      lastUpdated: 'আপডেট'
+      lastUpdated: 'আপডেট',
+      farmingAdvice: 'কৃষি পরামর্শ',
+      action: 'করণীয়'
     },
     en: {
       title: 'Weather',
@@ -94,7 +112,9 @@ export default function WeatherPage() {
       latitude: 'Latitude',
       longitude: 'Longitude',
       timezone: 'Timezone',
-      lastUpdated: 'Updated'
+      lastUpdated: 'Updated',
+      farmingAdvice: 'Farming Advice',
+      action: 'Action'
     }
   };
 
@@ -116,6 +136,172 @@ export default function WeatherPage() {
     loadLang();
   }, []);
 
+  // Generate farming advisories based on weather conditions
+  const generateAdvisories = (forecasts: WeatherResponse['forecasts']) => {
+    const newAdvisories: Advisory[] = [];
+
+    // Get current month for seasonal advice (Bangladesh cropping seasons)
+    const currentMonth = new Date().getMonth(); // 0-11
+    const isRabiSeason = currentMonth >= 10 || currentMonth <= 2; // Nov-Feb (wheat, mustard, vegetables)
+    const isKharifSeason = currentMonth >= 5 && currentMonth <= 9; // Jun-Oct (rice, jute)
+    const isPreMonsoon = currentMonth >= 3 && currentMonth <= 4; // Apr-May
+
+    // Check for heavy rain (>70% probability for multiple days)
+    const heavyRainDays = forecasts.filter((f) => f.rainProbability > 70).length;
+    if (heavyRainDays >= 2) {
+      newAdvisories.push({
+        type: 'warning',
+        titleBn: '🌧️ ভারী বৃষ্টির সতর্কতা',
+        titleEn: '🌧️ Heavy Rain Alert',
+        messageBn: `আগামী ৫ দিনে ${heavyRainDays} দিন ভারী বৃষ্টির সম্ভাবনা (৭০%+)।`,
+        messageEn: `${heavyRainDays} days of heavy rain expected (70%+) in the next 5 days.`,
+        actionBn: isKharifSeason 
+          ? 'ধান কাটা থাকলে আজই কেটে উঁচু জায়গায় রাখুন। জমিতে পানি নিষ্কাশনের ব্যবস্থা করুন।'
+          : 'ফসল ঢেকে রাখুন। শুকনো ফসল ঘরে তুলুন। নিচু জমিতে পানি জমতে পারে।',
+        actionEn: isKharifSeason
+          ? 'Harvest rice immediately and store in elevated areas. Ensure proper drainage in fields.'
+          : 'Cover crops. Store dried produce indoors. Low-lying areas may flood.',
+        icon: <CloudRain size={24} weight="duotone" className="text-blue-600" />,
+      });
+    }
+
+    // Check for moderate rain (40-70%)
+    const moderateRainDays = forecasts.filter((f) => f.rainProbability >= 40 && f.rainProbability <= 70).length;
+    if (moderateRainDays >= 3 && heavyRainDays < 2) {
+      newAdvisories.push({
+        type: 'info',
+        titleBn: '🌦️ বৃষ্টির সম্ভাবনা',
+        titleEn: '🌦️ Rain Expected',
+        messageBn: `আগামী কয়েকদিন হালকা থেকে মাঝারি বৃষ্টি হতে পারে।`,
+        messageEn: `Light to moderate rain expected in the coming days.`,
+        actionBn: 'স্প্রে বা সার দেওয়া থেকে বিরত থাকুন। বৃষ্টির পানি ধরে রাখতে জমি প্রস্তুত করুন।',
+        actionEn: 'Avoid spraying pesticides or fertilizers. Prepare fields to retain rainwater.',
+        icon: <Cloud size={24} weight="duotone" className="text-gray-500" />,
+      });
+    }
+
+    // Check for extreme heat (>38°C)
+    const extremeHeatDays = forecasts.filter((f) => f.tempMax > 38).length;
+    if (extremeHeatDays > 0) {
+      newAdvisories.push({
+        type: 'warning',
+        titleBn: '🔥 তীব্র গরম',
+        titleEn: '🔥 Extreme Heat',
+        messageBn: `তাপমাত্রা ৩৮°সে এর উপরে উঠবে। ফসল ও গবাদিপশু ঝুঁকিতে।`,
+        messageEn: `Temperature will exceed 38°C. Crops and livestock at risk.`,
+        actionBn: 'সকাল ও সন্ধ্যায় সেচ দিন। গবাদিপশুকে ছায়ায় রাখুন ও পর্যাপ্ত পানি দিন। দিনের মাঝামাঝি মাঠে কাজ এড়িয়ে চলুন।',
+        actionEn: 'Irrigate early morning and evening. Keep livestock in shade with ample water. Avoid fieldwork during midday.',
+        icon: <Sun size={24} weight="duotone" className="text-orange-600" />,
+      });
+    }
+
+    // Check for high heat (35-38°C)
+    const highHeatDays = forecasts.filter((f) => f.tempMax > 35 && f.tempMax <= 38).length;
+    if (highHeatDays >= 3 && extremeHeatDays === 0) {
+      newAdvisories.push({
+        type: 'info',
+        titleBn: '☀️ গরম আবহাওয়া',
+        titleEn: '☀️ Hot Weather',
+        messageBn: `তাপমাত্রা ৩৫°সে এর উপরে থাকবে।`,
+        messageEn: `Temperature will remain above 35°C.`,
+        actionBn: 'নিয়মিত সেচ দিন। মালচিং করে মাটির আর্দ্রতা ধরে রাখুন।',
+        actionEn: 'Provide regular irrigation. Use mulching to retain soil moisture.',
+        icon: <Thermometer size={24} weight="duotone" className="text-yellow-600" />,
+      });
+    }
+
+    // Check for very high humidity (>85%)
+    const veryHumidDays = forecasts.filter((f) => f.humidity > 85).length;
+    if (veryHumidDays >= 2) {
+      newAdvisories.push({
+        type: 'warning',
+        titleBn: '💧 অতিরিক্ত আর্দ্রতা - রোগের ঝুঁকি',
+        titleEn: '💧 High Humidity - Disease Risk',
+        messageBn: `আর্দ্রতা ৮৫% এর উপরে থাকবে। ছত্রাক ও পোকামাকড়ের আক্রমণ বাড়তে পারে।`,
+        messageEn: `Humidity above 85%. Increased risk of fungal diseases and pests.`,
+        actionBn: 'ধানের ব্লাস্ট, শীষ পচা রোগ সতর্কতা। প্রয়োজনে ছত্রাকনাশক স্প্রে করুন। গোলাঘরে ফসল ভালোভাবে শুকিয়ে রাখুন।',
+        actionEn: 'Watch for rice blast and panicle rot. Apply fungicide if needed. Ensure stored crops are well-dried.',
+        icon: <Drop size={24} weight="duotone" className="text-cyan-600" />,
+      });
+    }
+
+    // High humidity (80-85%)
+    const humidDays = forecasts.filter((f) => f.humidity > 80 && f.humidity <= 85).length;
+    if (humidDays >= 3 && veryHumidDays < 2) {
+      newAdvisories.push({
+        type: 'info',
+        titleBn: '💨 উচ্চ আর্দ্রতা',
+        titleEn: '💨 High Humidity',
+        messageBn: `আর্দ্রতা ৮০% এর উপরে থাকবে। ফসল শুকানো কঠিন হবে।`,
+        messageEn: `Humidity above 80%. Drying crops will be difficult.`,
+        actionBn: 'ফসল শুকানোর জন্য ভালো বাতাস চলাচলের জায়গা বেছে নিন। গোলাঘরে ভেন্টিলেশন নিশ্চিত করুন।',
+        actionEn: 'Choose well-ventilated areas for drying crops. Ensure good ventilation in storage.',
+        icon: <Wind size={24} weight="duotone" className="text-teal-600" />,
+      });
+    }
+
+    // Combined risk: Rain + High Humidity (worst for post-harvest)
+    const riskyDays = forecasts.filter(
+      (f) => f.rainProbability > 50 && f.humidity > 80
+    ).length;
+    if (riskyDays >= 2) {
+      newAdvisories.push({
+        type: 'warning',
+        titleBn: '⚠️ ফসল সংরক্ষণে সর্বোচ্চ সতর্কতা',
+        titleEn: '⚠️ Maximum Storage Caution',
+        messageBn: `বৃষ্টি ও আর্দ্রতা দুটোই বেশি - ফসল নষ্ট হওয়ার ঝুঁকি।`,
+        messageEn: `Both rain and humidity high - crop spoilage risk.`,
+        actionBn: 'কাটা ফসল অবশ্যই উঁচু ও শুকনো জায়গায় রাখুন। পাটের বস্তা ব্যবহার করুন, প্লাস্টিক এড়িয়ে চলুন। প্রতিদিন ফসল পরীক্ষা করুন।',
+        actionEn: 'Store harvested crops in elevated dry areas. Use jute bags, avoid plastic. Check crops daily.',
+        icon: <ShieldWarning size={24} weight="duotone" className="text-red-600" />,
+      });
+    }
+
+    // Good weather for farming activities
+    const clearDays = forecasts.filter(
+      (f) => f.rainProbability < 30 && f.tempMax < 35 && f.humidity < 80
+    ).length;
+    if (clearDays >= 3) {
+      newAdvisories.push({
+        type: 'success',
+        titleBn: '✅ উপযুক্ত আবহাওয়া',
+        titleEn: '✅ Favorable Weather',
+        messageBn: 'আবহাওয়া কৃষি কাজের জন্য অনুকূল।',
+        messageEn: 'Weather is favorable for farming activities.',
+        actionBn: isRabiSeason 
+          ? 'রবি ফসল (গম, সরিষা, আলু) বপন/রোপণের উপযুক্ত সময়। জমি তৈরি করুন।'
+          : isKharifSeason
+          ? 'ধান কাটা ও মাড়াই করার সেরা সময়। ফসল ভালোভাবে শুকিয়ে গুদামে রাখুন।'
+          : 'বীজতলা তৈরি ও চারা রোপণের উপযুক্ত সময়।',
+        actionEn: isRabiSeason
+          ? 'Ideal time for Rabi crops (wheat, mustard, potato). Prepare land.'
+          : isKharifSeason
+          ? 'Best time for rice harvesting and threshing. Dry properly before storage.'
+          : 'Good time for seedbed preparation and transplanting.',
+        icon: <Leaf size={24} weight="duotone" className="text-emerald-600" />,
+      });
+    }
+
+    // Good for drying
+    const dryingDays = forecasts.filter(
+      (f) => f.rainProbability < 20 && f.humidity < 70 && f.tempMax > 28
+    ).length;
+    if (dryingDays >= 2) {
+      newAdvisories.push({
+        type: 'success',
+        titleBn: '☀️ ফসল শুকানোর আদর্শ সময়',
+        titleEn: '☀️ Ideal Drying Weather',
+        messageBn: 'কম বৃষ্টি, কম আর্দ্রতা - ফসল শুকানোর জন্য চমৎকার।',
+        messageEn: 'Low rain, low humidity - excellent for drying crops.',
+        actionBn: 'ধান, গম, ডাল শুকানোর সেরা সুযোগ। রোদে ভালোভাবে শুকিয়ে নিন।',
+        actionEn: 'Best opportunity to dry rice, wheat, pulses. Sun-dry thoroughly.',
+        icon: <Sun size={24} weight="duotone" className="text-amber-500" />,
+      });
+    }
+
+    setAdvisories(newAdvisories);
+  };
+
   const handleDivisionChange = (divIndex: number) => {
     setSelectedDivisionIndex(divIndex);
     setSelectedDistrictIndex(0); // Reset to first district
@@ -127,6 +313,7 @@ export default function WeatherPage() {
     setLoading(true);
     setError(null);
     setWeatherData(null);
+    setAdvisories([]);
 
     try {
       const division = currentDivision.name;
@@ -146,6 +333,9 @@ export default function WeatherPage() {
 
       const data: WeatherResponse = await response.json();
       setWeatherData(data);
+      
+      // Generate farming advisories based on weather
+      generateAdvisories(data.forecasts);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
@@ -406,6 +596,72 @@ export default function WeatherPage() {
                 ))}
               </div>
             </div>
+
+            {/* Farming Advisories */}
+            {advisories.length > 0 && (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 mt-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Plant size={20} weight="duotone" className="text-emerald-600" />
+                  {text.farmingAdvice}
+                </h3>
+                
+                <div className="space-y-4">
+                  {advisories.map((advisory, index) => (
+                    <div
+                      key={index}
+                      className={`rounded-xl p-4 border-l-4 ${
+                        advisory.type === 'warning'
+                          ? 'bg-amber-50 border-amber-500'
+                          : advisory.type === 'success'
+                          ? 'bg-emerald-50 border-emerald-500'
+                          : 'bg-blue-50 border-blue-500'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`p-2 rounded-lg flex-shrink-0 ${
+                          advisory.type === 'warning'
+                            ? 'bg-amber-100'
+                            : advisory.type === 'success'
+                            ? 'bg-emerald-100'
+                            : 'bg-blue-100'
+                        }`}>
+                          {advisory.icon}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className={`font-bold mb-1 ${
+                            advisory.type === 'warning'
+                              ? 'text-amber-900'
+                              : advisory.type === 'success'
+                              ? 'text-emerald-900'
+                              : 'text-blue-900'
+                          }`}>
+                            {lang === 'bn' ? advisory.titleBn : advisory.titleEn}
+                          </h4>
+                          <p className={`text-sm mb-2 ${
+                            advisory.type === 'warning'
+                              ? 'text-amber-800'
+                              : advisory.type === 'success'
+                              ? 'text-emerald-800'
+                              : 'text-blue-800'
+                          }`}>
+                            {lang === 'bn' ? advisory.messageBn : advisory.messageEn}
+                          </p>
+                          <div className={`text-sm font-medium p-2 rounded-lg ${
+                            advisory.type === 'warning'
+                              ? 'bg-amber-100 text-amber-900'
+                              : advisory.type === 'success'
+                              ? 'bg-emerald-100 text-emerald-900'
+                              : 'bg-blue-100 text-blue-900'
+                          }`}>
+                            <span className="font-bold">{text.action}:</span> {lang === 'bn' ? advisory.actionBn : advisory.actionEn}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </>
         )}
 
