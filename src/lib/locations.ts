@@ -133,8 +133,19 @@ export const divisions: Division[] = [
   }
 ];
 
-// Helper function to get districts by division
-export function getDistrictsByDivision(divisionName: string): District[] {
+// Helper function to get all divisions
+export function getDivisions(): string[] {
+  return divisions.map(d => d.name);
+}
+
+// Helper function to get districts by division (returns string array)
+export function getDistrictsByDivision(divisionName: string): string[] {
+  const division = divisions.find(d => d.name === divisionName || d.nameBn === divisionName);
+  return division ? division.districts.map(d => d.name) : [];
+}
+
+// Helper function to get districts by division with full data
+export function getDistrictsByDivisionFull(divisionName: string): District[] {
   const division = divisions.find(d => d.name === divisionName || d.nameBn === divisionName);
   return division ? division.districts : [];
 }
@@ -146,4 +157,11 @@ export function getCoordinates(divisionName: string, districtName: string): Loca
   
   const district = division.districts.find(d => d.name === districtName || d.nameBn === districtName);
   return district ? district.coordinates : null;
+}
+
+// Helper function to get district coordinates (returns lat/lon object, defaults to Dhaka)
+export function getDistrictCoordinates(divisionName: string, districtName: string): { lat: number; lon: number } {
+  const coords = getCoordinates(divisionName, districtName);
+  // Default to Dhaka coordinates if not found
+  return coords || { lat: 23.8103, lon: 90.4125 };
 }
