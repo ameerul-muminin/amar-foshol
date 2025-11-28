@@ -1,4 +1,4 @@
-# 🌾 আমার ফসল (Amar Foshol) - HarvestGuard
+# 🌾 আমার ফসল (Amar Foshol)
 
 > **HackFest 2025** | Team SteveJobs
 
