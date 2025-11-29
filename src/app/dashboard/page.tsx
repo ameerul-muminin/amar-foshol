@@ -15,6 +15,7 @@ import {
 } from '@phosphor-icons/react';
 import Header from '@/components/Header';
 import CropAlerts from '@/components/CropAlerts';
+import LossPreventionScore from '@/components/LossPreventionScore';
 
 interface Farmer {
   id: string;
@@ -238,6 +239,15 @@ export default function DashboardPage() {
               <h4 className="font-bold text-gray-900 mb-1">{text.badges}</h4>
               <p className="text-sm text-gray-500">{farmer.badges.length} {lang === 'bn' ? 'অর্জিত' : 'earned'}</p>
             </button>
+          </div>
+        </div>
+
+        {/* New Feature: Loss Prevention Score (explicit mention in dashboard) */}
+        <div className="mb-8">
+          <h3 className="text-xl font-bold text-gray-900 mb-2">নতুন বৈশিষ্ট্য: লস প্রিভেনশন স্কোর</h3>
+          <p className="text-sm text-gray-500 mb-4">এই ড্যাশবোর্ডে এখন আপনি দেখতে পারবেন কত কেজি খাবার বাঁচানো হয়েছে এবং মাসিক স্কোর আপডেট করতে পারবেন। নিচের কার্ড থেকে স্কোর আপডেট করুন।</p>
+          <div className="max-w-md">
+            <LossPreventionScore />
           </div>
         </div>
 
