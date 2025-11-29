@@ -556,14 +556,14 @@ const simulateSMS = (alert: AlertContext) => {
   if (alert.riskLevel === 'critical') {
     console.log(`
 ╔════════════════════════════════════════╗
-║     🚨 SMS ALERT - HARVESTGUARD       ║
+║     🚨 SMS ALERT                      ║
 ╠════════════════════════════════════════╣
 ║ প্রাপক: ${alert.farmerPhone}            ║
 ║ সময়: ${new Date().toLocaleString('bn-BD')}
 ║                                        ║
 ║ ${alert.message}                       ║
 ║                                        ║
-║ লিংক: https://harvestguard.app/alert ║
+║ লিংক: https://harvestguard.app/alert   ║
 ╚════════════════════════════════════════╝
     `);
     
