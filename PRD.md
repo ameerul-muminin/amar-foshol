@@ -1,6 +1,6 @@
 # 📋 Product Requirements Document (PRD)
 
-## আমার ফসল (Amar Foshol) - HarvestGuard
+## আমার ফসল (Amar Foshol)
 
 **Version:** 1.0  
 **Last Updated:** November 2025  
