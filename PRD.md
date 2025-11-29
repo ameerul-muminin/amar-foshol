@@ -1,6 +1,6 @@
 # 📋 Product Requirements Document (PRD)
 
-## আমার ফসল (Amar Foshol) - HarvestGuard
+## আমার ফসল (Amar Foshol)
 
 **Version:** 1.0  
 **Last Updated:** November 2025  
@@ -556,14 +556,14 @@ const simulateSMS = (alert: AlertContext) => {
   if (alert.riskLevel === 'critical') {
     console.log(`
 ╔════════════════════════════════════════╗
-║     🚨 SMS ALERT - HARVESTGUARD       ║
+║     🚨 SMS ALERT                      ║
 ╠════════════════════════════════════════╣
 ║ প্রাপক: ${alert.farmerPhone}            ║
 ║ সময়: ${new Date().toLocaleString('bn-BD')}
 ║                                        ║
 ║ ${alert.message}                       ║
 ║                                        ║
-║ লিংক: https://harvestguard.app/alert ║
+║ লিংক: https://harvestguard.app/alert   ║
 ╚════════════════════════════════════════╝
     `);
     
@@ -845,6 +845,9 @@ const customRAG = {
   pipeline: 'Embed query → Retrieve top-k docs → Generate with context'
 };
 ```
+#### B4: Voice Integration-
+**Farmers can ask question via voice:**
+
 
 ---
 
