@@ -343,6 +343,135 @@ Weather indicates high humidity → Indoor aeration recommended.
 
 ---
 
+---
+
+## PART B – Onsite Features (7 hours)
+
+**Weight:** 50%  
+**Time Available:** 7 hours onsite  
+**AI Assistance:** Allowed but tasks require integration, debugging, and smart decisions
+
+### B1: Local Risk Map (Community Awareness)
+
+**Purpose:** Visualize regional spoilage threats to foster community awareness and contextual decision-making
+
+#### B1.1: Map Integration
+
+| Component     | Specification                                     |
+| ------------- | ------------------------------------------------- |
+| Library       | Leaflet.js (lightweight, mobile-optimized)        |
+| CDN           | `https://unpkg.com/leaflet@1.9.4/dist/leaflet.js` |
+| Tile Provider | OpenStreetMap tiles (free)                        |
+| Auto-Center   | Based on farmer's registered Division/District    |
+| Zoom Level    | 10-12 (district-level view)                       |
+
+#### B1.2: Location Data Structure
+
+```typescript
+interface FarmLocation {
+  id: string;
+  lat: number;
+  lon: number;
+  cropType: "paddy" | "wheat" | "vegetables";
+  riskLevel: "low" | "medium" | "high";
+  lastUpdated: Date;
+  // No personal identifiers
+}
+
+// Mock neighbor data generation
+const generateMockNeighbors = (district: string): FarmLocation[] => {
+  // Generate 10-15 random points within district boundaries
+  // Distribute risk levels: 60% low, 30% medium, 10% high
+};
+```
+
+#### B1.3: Pin Visualization
+
+| Pin Type    | Color            | Icon | Purpose                         |
+| ----------- | ---------------- | ---- | ------------------------------- |
+| Own Farm    | Blue (#3b82f6)   | 📍   | Current user's location         |
+| Low Risk    | Green (#22c55e)  | 🟢   | Neighboring farms - low risk    |
+| Medium Risk | Yellow (#eab308) | 🟡   | Neighboring farms - medium risk |
+| High Risk   | Red (#ef4444)    | 🔴   | Neighboring farms - high risk   |
+
+#### B1.4: Bangla Pop-up Template
+
+```javascript
+const createBanglaPopup = (location: FarmLocation) => `
+  <div class="p-2 min-w-[200px]">
+    <p class="font-bold text-base mb-1">
+      ফসল: ${getCropNameBn(location.cropType)}
+    </p>
+    <p class="text-sm mb-1">
+      ঝুঁকি: ${getRiskLevelBn(location.riskLevel)}
+    </p>
+    <p class="text-xs text-gray-600">
+      হালনাগাদ: ${formatDateBn(location.lastUpdated)}
+    </p>
+  </div>
+`;
+
+// Translation helpers
+const getCropNameBn = (crop: string) =>
+  ({
+    paddy: "ধান/চাল",
+    wheat: "গম",
+    vegetables: "সবজি",
+  }[crop]);
+
+const getRiskLevelBn = (risk: string) =>
+  ({
+    low: "নিম্ন (নিরাপদ)",
+    medium: "মধ্যম (সতর্ক থাকুন)",
+    high: "উচ্চ (জরুরি পদক্ষেপ নিন)",
+  }[risk]);
+```
+
+#### B1.5: Privacy Constraints
+
+**MANDATORY Privacy Rules:**
+
+- ❌ NO farmer names
+- ❌ NO phone numbers
+- ❌ NO exact addresses
+- ❌ NO farm names
+- ✅ Only: Crop type, Risk level, General location (district-level)
+- ✅ Anonymized identifiers (e.g., "Farm #23")
+
+#### B1.6: Map Features
+
+| Feature          | Requirement                                |
+| ---------------- | ------------------------------------------ |
+| Touch Gestures   | Pinch-to-zoom, pan with finger             |
+| Performance      | Load < 2 seconds on 3G                     |
+| Responsiveness   | Full-width on mobile, sidebar on desktop   |
+| Offline Behavior | Show cached map tiles if available         |
+| Legend           | Color-coded risk levels with Bangla labels |
+
+#### B1.7: Mock Data Boundaries
+
+**Division-District Coordinate Ranges:**
+
+```javascript
+const districtBounds = {
+  "ঢাকা-ঢাকা": {
+    latMin: 23.7,
+    latMax: 23.9,
+    lonMin: 90.3,
+    lonMax: 90.5,
+  },
+  "চট্টগ্রাম-চট্টগ্রাম": {
+    latMin: 22.2,
+    latMax: 22.5,
+    lonMin: 91.7,
+    lonMax: 92.0,
+  },
+  // ... add all districts
+};
+```
+
+---
+
 ## Technical Specifications
 
 ### Tech Stack
