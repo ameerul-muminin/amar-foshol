@@ -15,6 +15,7 @@ import {
 } from '@phosphor-icons/react';
 import Header from '@/components/Header';
 import CropAlerts from '@/components/CropAlerts';
+import PestIdentifier from '@/components/PestIdentifier';
 
 interface Farmer {
   id: string;
@@ -154,6 +155,11 @@ export default function DashboardPage() {
         {/* Crop Risk Alert */}
         <div className="mb-8">
           <CropAlerts cropType="potato" location="Dhaka" lang={lang} />
+        </div>
+
+        {/* Pest Identifier */}
+        <div className="mb-8">
+          <PestIdentifier lang={lang} />
         </div>
 
         {/* Profile Info */}
