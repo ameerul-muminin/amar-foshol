@@ -472,6 +472,382 @@ const districtBounds = {
 
 ---
 
+
+---
+
+### B2: Smart Alert System (Decision Engine)
+
+**Purpose:** Generate specific, actionable advice in Bangla by combining crop data, weather forecasts, and risk levels
+
+#### B2.1: Decision Engine Logic
+
+**Input Data Sources:**
+
+```typescript
+interface AlertContext {
+  cropType: 'paddy';
+  storageType: StorageType;
+  harvestDate: Date;
+  weightKg: number;
+  currentWeather: WeatherForecast;
+  forecastData: WeatherForecast[];
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  location: {
+    division: string;
+    district: string;
+  };
+}
+```
+
+**Alert Generation Rules:**
+
+| Risk Level | Conditions | Bangla Alert Example |
+|------------|-----------|---------------------|
+| **Critical** | Rain > 80% + Humidity > 85% + Storage = Open Area | "আগামীকাল ভারী বৃষ্টি হবে এবং আপনার ধান খোলা জায়গায় রাখা। এখনই ঢেকে দিন বা ঘরে নিয়ে যান।" |
+| **Critical** | Temp > 36°C + Humidity > 80% + Storage = Indoor | "গুদামে তাপমাত্রা ৩৬°সে এবং আর্দ্রতা বেশি। এখনই ফ্যান চালু করুন।" |
+| **High** | Rain > 70% for 2+ days + Storage = Jute Bag | "আগামী ২ দিন বৃষ্টি ৭৫%। পাটের বস্তা উঁচু জায়গায় রাখুন এবং ঢেকে দিন।" |
+| **High** | Humidity > 75% for 3+ days | "আর্দ্রতা ৩ দিন ধরে বেশি থাকবে। ধান শুকানোর ব্যবস্থা করুন।" |
+| **Medium** | Temp spike expected | "আগামীকাল তাপমাত্রা বাড়বে। বিকেলে ধান সরিয়ে ছায়ায় রাখুন।" |
+| **Medium** | Humidity rising | "আর্দ্রতা বাড়ছে। বায়ু চলাচল নিশ্চিত করুন।" |
+
+#### B2.2: Alert Quality Standards
+
+**Bad Alert (Avoid):**
+```
+❌ "আবহাওয়া খারাপ।"
+❌ "সতর্ক থাকুন।"
+❌ "ঝুঁকি আছে।"
+```
+
+**Good Alert (Target):**
+```
+âœ… "আগামীকাল বৃষ্টি হবে এবং আপনার আলুর গুদামে আর্দ্রতা বেশি। এখনই ফ্যান চালু করুন।"
+âœ… "পরের ৩ দিন তাপমাত্রা ৩৫°সে থাকবে। আপনার ৫০ কেজি ধান ছায়ায় রাখুন এবং সন্ধ্যায় বায়ু চলাচল করান।"
+âœ… "আজ রাতে বৃষ্টি ৯০%। আপনার খোলা জায়গার ১০০ কেজি ধান এখনই ঢেকে দিন।"
+```
+
+#### B2.3: Alert Components Structure
+
+Every alert must include:
+
+1. **সমস্যা (Problem)** - What's happening?
+2. **কারণ (Reason)** - Why is this dangerous?
+3. **পদক্ষেপ (Action)** - What to do NOW?
+4. **সময়সীমা (Timeline)** - When to act?
+
+**Example Structure:**
+```
+⚠️ জরুরি সতর্কতা
+
+সমস্যা: আগামীকাল ভারী বৃষ্টি (৯০%)
+কারণ: আপনার ১০০ কেজি ধান খোলা জায়গায়
+পদক্ষেপ: এখনই পলিথিন দিয়ে ঢেকে দিন
+সময়সীমা: আজ সন্ধ্যা ৬টার মধ্যে
+
+[পদক্ষেপ নিলাম âœ"] [পরে দেখব]
+```
+
+#### B2.4: SMS Simulation
+
+**Browser Console Notification:**
+
+```javascript
+const simulateSMS = (alert: AlertContext) => {
+  if (alert.riskLevel === 'critical') {
+    console.log(`
+╔════════════════════════════════════════╗
+║     🚨 SMS ALERT - HARVESTGUARD       ║
+╠════════════════════════════════════════╣
+║ প্রাপক: ${alert.farmerPhone}            ║
+║ সময়: ${new Date().toLocaleString('bn-BD')}
+║                                        ║
+║ ${alert.message}                       ║
+║                                        ║
+║ লিংক: https://harvestguard.app/alert ║
+╚════════════════════════════════════════╝
+    `);
+    
+    // Also show browser notification if permission granted
+    if (Notification.permission === 'granted') {
+      new Notification('🚨 জরুরি সতর্কতা', {
+        body: alert.message,
+        icon: '/icons/alert.png',
+        vibrate: [200, 100, 200]
+      });
+    }
+  }
+};
+```
+
+#### B2.5: Alert History & Tracking
+
+```typescript
+interface AlertLog {
+  id: string;
+  batchId: string;
+  alertType: 'weather' | 'temperature' | 'humidity' | 'pest' | 'mold';
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  message: string;
+  actionTaken: boolean;
+  actionTimestamp?: Date;
+  outcome?: 'prevented_loss' | 'partial_loss' | 'total_loss' | 'pending';
+  createdAt: Date;
+}
+```
+
+---
+---
+
+### B3: Pest Identification and Action Plan (Visual RAG)
+
+**Purpose:** Enable farmers to upload pest/damage images and receive AI-powered identification with localized treatment plans in Bangla
+
+#### B3.1: Image Upload Interface
+
+**UI Requirements:**
+
+| Component | Specification |
+|-----------|--------------|
+| Upload Button | Large, 60px height, camera icon + "ছবি তুলুন" text |
+| Preview Area | 300x300px, crop to square, show thumbnail |
+| File Types | JPEG, PNG, HEIC (auto-convert) |
+| Max Size | 5MB (compress client-side if larger) |
+| Capture Mode | Mobile: direct camera, Desktop: file picker |
+
+**Upload Flow:**
+```
+1. User taps "ছবি তুলুন"
+2. Camera opens OR file picker
+3. Image preview shown
+4. "বিশ্লেষণ করুন" button appears
+5. Loading state (2-5 seconds)
+6. Results displayed
+```
+
+#### B3.2: Gemini Visual RAG Integration (MANDATORY)
+
+**API Configuration:**
+
+```typescript
+const GEMINI_CONFIG = {
+  apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY,
+  model: 'gemini-2.0-flash-exp', // or gemini-1.5-pro
+  endpoint: 'https://generativelanguage.googleapis.com/v1beta/models',
+  tools: [
+    {
+      googleSearchRetrieval: {
+        dynamicRetrievalConfig: {
+          mode: 'MODE_DYNAMIC',
+          dynamicThreshold: 0.7
+        }
+      }
+    }
+  ]
+};
+```
+
+**Request Structure:**
+
+```javascript
+const analyzePestImage = async (imageBase64: string) => {
+  const response = await fetch(
+    `${GEMINI_CONFIG.endpoint}/${GEMINI_CONFIG.model}:generateContent?key=${GEMINI_CONFIG.apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              {
+                text: `You are an agricultural expert in Bangladesh. Analyze this image of a pest or crop damage on rice/paddy crops.
+
+IMPORTANT: Use Google Search to find the most current, localized information about this pest in Bangladesh.
+
+Provide your response in the following JSON format (all text in Bangla):
+{
+  "pestName": "পোকার নাম বাংলায়",
+  "pestNameLatin": "Scientific name",
+  "riskLevel": "high/medium/low",
+  "confidence": 0.85,
+  "description": "সংক্ষিপ্ত বিবরণ",
+  "symptoms": ["লক্ষণ ১", "লক্ষণ ২"],
+  "actionPlan": {
+    "immediate": ["এখনই করণীয়"],
+    "shortTerm": ["৩-৭ দিনে করণীয়"],
+    "prevention": ["ভবিষ্যতে প্রতিরোধ"]
+  },
+  "localTreatment": ["স্থানীয় পদ্ধতি"],
+  "chemicalOptions": ["রাসায়নিক বিকল্প"],
+  "estimatedLoss": "সম্ভাব্য ক্ষতি",
+  "sources": ["তথ্যসূত্র"]
+}`
+              },
+              {
+                inlineData: {
+                  mimeType: 'image/jpeg',
+                  data: imageBase64
+                }
+              }
+            ]
+          }
+        ],
+        tools: [
+          {
+            googleSearchRetrieval: {}
+          }
+        ],
+        generationConfig: {
+          temperature: 0.4,
+          maxOutputTokens: 2048
+        }
+      })
+    }
+  );
+  
+  return await response.json();
+};
+```
+
+#### B3.3: Risk Level Classification
+
+| Risk Level | Icon | Color | Bangla Label | Criteria |
+|------------|------|-------|--------------|----------|
+| High | 🔴 | Red | উচ্চ ঝুঁকি | Pest can cause >30% loss in <7 days |
+| Medium | 🟡 | Yellow | মাঝারি ঝুঁকি | Pest causes 10-30% loss in 7-14 days |
+| Low | 🟢 | Green | নিম্ন ঝুঁকি | Minimal impact, slow progression |
+
+#### B3.4: Bangla Treatment Plan UI
+
+**Display Template:**
+
+```tsx
+<div className="pest-result-card">
+  <header className="flex items-center justify-between">
+    <h2>🐛 {result.pestName}</h2>
+    <span className={`risk-badge ${result.riskLevel}`}>
+      {getRiskLabelBn(result.riskLevel)}
+    </span>
+  </header>
+  
+  <section className="description">
+    <p>{result.description}</p>
+    <p className="text-sm text-gray-600">
+      বৈজ্ঞানিক নাম: {result.pestNameLatin}
+    </p>
+  </section>
+  
+  <section className="symptoms">
+    <h3>📋 লক্ষণসমূহ</h3>
+    <ul>
+      {result.symptoms.map(symptom => (
+        <li key={symptom}>• {symptom}</li>
+      ))}
+    </ul>
+  </section>
+  
+  <section className="action-plan">
+    <div className="immediate">
+      <h3>🚨 এখনই করুন</h3>
+      {result.actionPlan.immediate.map(action => (
+        <div className="action-item">{action}</div>
+      ))}
+    </div>
+    
+    <div className="short-term">
+      <h3>📅 ৩-৭ দিনে করুন</h3>
+      {result.actionPlan.shortTerm.map(action => (
+        <div className="action-item">{action}</div>
+      ))}
+    </div>
+    
+    <div className="prevention">
+      <h3>🛡️ ভবিষ্যতে প্রতিরোধ</h3>
+      {result.actionPlan.prevention.map(action => (
+        <div className="action-item">{action}</div>
+      ))}
+    </div>
+  </section>
+  
+  <section className="treatment-options">
+    <h3>🌿 স্থানীয় পদ্ধতি (রাসায়নিক ছাড়া)</h3>
+    <ul>
+      {result.localTreatment.map(method => (
+        <li>✓ {method}</li>
+      ))}
+    </ul>
+    
+    {result.chemicalOptions.length > 0 && (
+      <>
+        <h3>🧪 রাসায়নিক বিকল্প (প্রয়োজনে)</h3>
+        <ul>
+          {result.chemicalOptions.map(chemical => (
+            <li>• {chemical}</li>
+          ))}
+        </ul>
+      </>
+    )}
+  </section>
+  
+  <section className="estimated-loss">
+    <h3>⚠️ সম্ভাব্য ক্ষতি</h3>
+    <p>{result.estimatedLoss}</p>
+  </section>
+  
+  <footer className="sources">
+    <details>
+      <summary>তথ্যসূত্র</summary>
+      {result.sources.map(source => (
+        <a href={source} target="_blank">{source}</a>
+      ))}
+    </details>
+  </footer>
+</div>
+```
+
+#### B3.5: Local Treatment Examples (Bangla)
+
+**Common Pests & Organic Solutions:**
+
+| Pest | Bangla Name | Local Treatment |
+|------|-------------|-----------------|
+| Rice Stem Borer | ধানের কাণ্ড ছিদ্রকারী | নিম পাতার রস স্প্রে করুন (১ লিটার পানিতে ১০০ গ্রাম নিম পাতা) |
+| Brown Plant Hopper | বাদামি গাছ ফড়িং | আলোর ফাঁদ ব্যবহার করুন, সাবান-পানি স্প্রে |
+| Rice Leaf Folder | ধানের পাতা মোড়ানো পোকা | হাতে ধরে মারুন, ছাই ছিটিয়ে দিন |
+| Rice Gall Midge | ধানের গল মিজ | আক্রান্ত চারা তুলে ফেলুন, জৈব সার দিন |
+
+#### B3.6: Performance Requirements
+
+| Metric | Target |
+|--------|--------|
+| Image compression | < 1MB after compression |
+| API response time | < 5 seconds |
+| UI rendering | < 1 second after response |
+| Offline fallback | Show cached results if available |
+| Error handling | Clear Bangla error messages |
+
+#### B3.7: BONUS - Custom RAG Pipeline
+
+**Alternative to Google Search Grounding:**
+
+```typescript
+// Use vector database with local agricultural knowledge
+const customRAG = {
+  vectorDB: 'Pinecone/Weaviate',
+  embeddings: 'text-embedding-3-small',
+  knowledgeBase: [
+    'Bangladesh Agricultural Research Institute (BARI) pest guides',
+    'Department of Agricultural Extension (DAE) advisories',
+    'Local farmer success stories',
+    'Regional pest outbreak data'
+  ],
+  pipeline: 'Embed query → Retrieve top-k docs → Generate with context'
+};
+```
+
+---
+
 ## Technical Specifications
 
 ### Tech Stack

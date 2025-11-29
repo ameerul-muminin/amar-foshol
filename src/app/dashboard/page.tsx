@@ -9,8 +9,11 @@ import {
   CloudRain, 
   Package,
   Medal,
-  Globe
+  Globe,
+  Microphone,
+  MapPin
 } from '@phosphor-icons/react';
+import Header from '@/components/Header';
 
 interface Farmer {
   id: string;
@@ -43,7 +46,9 @@ export default function DashboardPage() {
       email: 'ইমেইল',
       phone: 'ফোন',
       language: 'ভাষা',
-      quickActions: 'দ্রুত কাজ'
+      quickActions: 'দ্রুত কাজ',
+      map: 'মানচিত্র',
+      voiceAssistant: 'ভয়েস সহকারী'
     },
     en: {
       welcome: 'Welcome',
@@ -58,7 +63,9 @@ export default function DashboardPage() {
       email: 'Email',
       phone: 'Phone',
       language: 'Language',
-      quickActions: 'Quick Actions'
+      quickActions: 'Quick Actions',
+      map: 'Map',
+      voiceAssistant: 'Voice Assistant'
     }
   };
 
@@ -115,39 +122,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center text-white">
-                <Plant size={24} weight="fill" />
-              </div>
-              <div>
-                <h1 className="font-bold text-lg text-gray-900">আমার ফসল</h1>
-                <p className="text-xs text-gray-500">{text.dashboard}</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setLang(prev => prev === 'bn' ? 'en' : 'bn')}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 hover:border-emerald-500 transition-colors text-sm font-medium"
-              >
-                <Globe size={14} weight="bold" />
-                {lang === 'bn' ? 'EN' : 'BN'}
-              </button>
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 hover:bg-red-50 text-gray-700 hover:text-red-600 transition-colors text-sm font-medium"
-              >
-                <SignOut size={16} weight="bold" />
-                <span className="hidden sm:inline">{text.logout}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header subtitle={text.dashboard} lang={lang} setLang={setLang} onLogout={handleLogout} />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -215,6 +190,28 @@ export default function DashboardPage() {
               </div>
               <h4 className="font-bold text-gray-900 mb-1">{text.weather}</h4>
               <p className="text-sm text-gray-500">{lang === 'bn' ? 'আবহাওয়া দেখুন' : 'View weather'}</p>
+            </button>
+
+            <button 
+              onClick={() => router.push('/dashboard/map')}
+              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-emerald-500 transition-all text-left group"
+            >
+              <div className="w-12 h-12 bg-sky-100 rounded-xl flex items-center justify-center text-sky-600 mb-4 group-hover:bg-sky-500 group-hover:text-white transition-colors">
+                <MapPin size={24} weight="duotone" />
+              </div>
+              <h4 className="font-bold text-gray-900 mb-1">{text.map}</h4>
+              <p className="text-sm text-gray-500">{lang === 'bn' ? 'লোকাল মানচিত্র দেখুন' : 'View local map'}</p>
+            </button>
+
+            <button 
+              onClick={() => router.push('/voice')}
+              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-emerald-500 transition-all text-left group"
+            >
+              <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 mb-4 group-hover:bg-indigo-500 group-hover:text-white transition-colors">
+                <Microphone size={24} weight="duotone" />
+              </div>
+              <h4 className="font-bold text-gray-900 mb-1">{text.voiceAssistant}</h4>
+              <p className="text-sm text-gray-500">{lang === 'bn' ? 'ভয়েস কমাণ্ড চালু করুন' : 'Open voice assistant'}</p>
             </button>
 
             <button 
