@@ -14,6 +14,7 @@ import {
   MapPin
 } from '@phosphor-icons/react';
 import Header from '@/components/Header';
+import CropAlerts from '@/components/CropAlerts';
 
 interface Farmer {
   id: string;
@@ -148,6 +149,11 @@ export default function DashboardPage() {
               <User size={32} weight="duotone" />
             </div>
           </div>
+        </div>
+
+        {/* Crop Risk Alert */}
+        <div className="mb-8">
+          <CropAlerts cropType="potato" location="Dhaka" lang={lang} />
         </div>
 
         {/* Profile Info */}
