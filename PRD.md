@@ -845,6 +845,9 @@ const customRAG = {
   pipeline: 'Embed query → Retrieve top-k docs → Generate with context'
 };
 ```
+#### B4: Voice Integration-
+**Farmers can ask question via voice:**
+
 
 ---
 
