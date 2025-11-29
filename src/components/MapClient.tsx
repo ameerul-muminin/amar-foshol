@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FarmLocation } from '../lib/map-utils';
 import { generateMockNeighbors, districtBounds, formatDateBn, getCropNameBn, getRiskLevelBn } from '../lib/map-utils';
+import localforage from 'localforage';
 
 declare global {
   interface Window { L: any; }
@@ -13,6 +14,7 @@ export default function MapClient({ division = 'ঢাকা', district = 'ঢ�
   const leafletMapRef = useRef<any | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [neighbors, setNeighbors] = useState<FarmLocation[]>([]);
+  const [isOffline, setIsOffline] = useState(false);
 
   useEffect(() => {
     // inject Leaflet CSS
@@ -54,6 +56,18 @@ export default function MapClient({ division = 'ঢাকা', district = 'ঢ�
   }, []);
 
   useEffect(() => {
+    const onOnline = () => setIsOffline(false);
+    const onOffline = () => setIsOffline(true);
+    window.addEventListener('online', onOnline);
+    window.addEventListener('offline', onOffline);
+    setIsOffline(!navigator.onLine);
+    return () => {
+      window.removeEventListener('online', onOnline);
+      window.removeEventListener('offline', onOffline);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!loaded) return;
     if (!mapRef.current) return;
     const L = window.L;
@@ -66,7 +80,7 @@ export default function MapClient({ division = 'ঢাকা', district = 'ঢ�
       const centerLat = (bounds.latMin + bounds.latMax) / 2;
       const centerLon = (bounds.lonMin + bounds.lonMax) / 2;
 
-      const map = L.map(mapRef.current, { zoomControl: true }).setView([centerLat, centerLon], 11);
+      const map = L.map(mapRef.current, { zoomControl: true, touchZoom: true, dragging: true }).setView([centerLat, centerLon], 11);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
@@ -76,60 +90,97 @@ export default function MapClient({ division = 'ঢাকা', district = 'ঢ�
     }
 
     const map = leafletMapRef.current;
-    // generate mock neighbors
-    const mock = generateMockNeighbors(district, 15);
-    setNeighbors(mock);
 
-    // clear existing markers layer if exists
-    if ((map as any)._markerLayer) {
-      map.removeLayer((map as any)._markerLayer);
-    }
+    // choose neighbor count based on screen size (reduce on small screens)
+    const neighborCount = typeof window !== 'undefined' && window.innerWidth < 640 ? 8 : 15;
 
-    const markerLayer = window.L.layerGroup();
+    const cacheKey = `map_neighbors_${division}_${district}`;
 
-    // own farm marker at center
-    const key = `${division}-${district}`;
-    const bounds = (districtBounds as any)[key] ?? { latMin: 23.7, latMax: 23.9, lonMin: 90.3, lonMax: 90.5 };
-    const centerLat = (bounds.latMin + bounds.latMax) / 2;
-    const centerLon = (bounds.lonMin + bounds.lonMax) / 2;
+    const loadNeighbors = async () => {
+      // If offline, attempt to load cached neighbors
+      if (!navigator.onLine) {
+        try {
+          const cached = await localforage.getItem<string>(cacheKey);
+          if (cached) {
+            const parsed: FarmLocation[] = JSON.parse(cached).map((it: any) => ({ ...it, lastUpdated: new Date(it.lastUpdated) }));
+            setNeighbors(parsed);
+            renderMarkers(parsed);
+            return;
+          }
+        } catch (e) {
+          console.warn('Failed reading cached neighbors', e);
+        }
+      }
 
-    const ownIcon = window.L.divIcon({
-      html: `<div style="width:18px;height:18px;border-radius:9px;background:#3b82f6;border:2px solid white;"></div>`,
-      className: ''
-    });
+      // online generation
+      const mock = generateMockNeighbors(district, neighborCount);
+      setNeighbors(mock);
+      // cache for offline use (serialize dates)
+      try {
+        const serial = JSON.stringify(mock.map(m => ({ ...m, lastUpdated: (m.lastUpdated as Date).toISOString() })));
+        await localforage.setItem(cacheKey, serial);
+      } catch (e) {
+        console.warn('Failed to cache neighbors', e);
+      }
 
-    const ownMarker = window.L.marker([centerLat, centerLon], { icon: ownIcon }).bindPopup(`<div class="p-2"><strong>আমি</strong><br/>${division} • ${district}</div>`);
-    markerLayer.addLayer(ownMarker);
+      renderMarkers(mock);
+    };
 
-    for (const loc of mock) {
-      const color = loc.riskLevel === 'high' ? '#ef4444' : loc.riskLevel === 'medium' ? '#eab308' : '#22c55e';
-      const icon = window.L.divIcon({
-        html: `<div style="width:14px;height:14px;border-radius:7px;background:${color};border:2px solid white;"></div>`,
+    const renderMarkers = (list: FarmLocation[]) => {
+      // clear existing markers layer if exists
+      if ((map as any)._markerLayer) {
+        try { map.removeLayer((map as any)._markerLayer); } catch (e) {}
+      }
+
+      const markerLayer = window.L.layerGroup();
+
+      // own farm marker at center
+      const key = `${division}-${district}`;
+      const bounds = (districtBounds as any)[key] ?? { latMin: 23.7, latMax: 23.9, lonMin: 90.3, lonMax: 90.5 };
+      const centerLat = (bounds.latMin + bounds.latMax) / 2;
+      const centerLon = (bounds.lonMin + bounds.lonMax) / 2;
+
+      const ownIcon = window.L.divIcon({
+        html: `<div style="width:18px;height:18px;border-radius:9px;background:#3b82f6;border:2px solid white;"></div>`,
         className: ''
       });
 
-      const marker = window.L.marker([loc.lat, loc.lon], { icon });
+      const ownMarker = window.L.marker([centerLat, centerLon], { icon: ownIcon }).bindPopup(`<div class="p-2"><strong>আমি</strong><br/>${division} • ${district}</div>`);
+      markerLayer.addLayer(ownMarker);
 
-      const popupHtml = `
-        <div style="min-width:180px;font-family:inherit">
-          <p style="font-weight:700;margin:0 0 6px">ফসল: ${getCropNameBn(loc.cropType)}</p>
-          <p style="margin:0 0 6px">ঝুঁকি: ${getRiskLevelBn(loc.riskLevel)}</p>
-          <p style="margin:0;font-size:12px;color:#6b7280">হালনাগাদ: ${formatDateBn(loc.lastUpdated)}</p>
-        </div>
-      `;
+      for (const loc of list) {
+        const color = loc.riskLevel === 'high' ? '#ef4444' : loc.riskLevel === 'medium' ? '#eab308' : '#22c55e';
+        const icon = window.L.divIcon({
+          html: `<div style="width:14px;height:14px;border-radius:7px;background:${color};border:2px solid white;"></div>`,
+          className: ''
+        });
 
-      marker.bindPopup(popupHtml);
-      markerLayer.addLayer(marker);
-    }
+        const marker = window.L.marker([loc.lat, loc.lon], { icon });
 
-    markerLayer.addTo(map);
-    (map as any)._markerLayer = markerLayer;
+        const popupHtml = `
+          <div style="min-width:180px;font-family:inherit">
+            <p style="font-weight:700;margin:0 0 6px">${loc.id}</p>
+            <p style="font-weight:700;margin:0 0 6px">ফসল: ${getCropNameBn(loc.cropType)}</p>
+            <p style="margin:0 0 6px">ঝুঁকি: ${getRiskLevelBn(loc.riskLevel)}</p>
+            <p style="margin:0;font-size:12px;color:#6b7280">হালনাগাদ: ${formatDateBn(loc.lastUpdated)}</p>
+          </div>
+        `;
 
-    // fit bounds loosely to district
-    const pad = 0.02;
-    const southWest = window.L.latLng(bounds.latMin - pad, bounds.lonMin - pad);
-    const northEast = window.L.latLng(bounds.latMax + pad, bounds.lonMax + pad);
-    map.fitBounds(window.L.latLngBounds(southWest, northEast), { padding: [20, 20] });
+        marker.bindPopup(popupHtml);
+        markerLayer.addLayer(marker);
+      }
+
+      markerLayer.addTo(map);
+      (map as any)._markerLayer = markerLayer;
+
+      // fit bounds loosely to district
+      const pad = 0.02;
+      const southWest = window.L.latLng(bounds.latMin - pad, bounds.lonMin - pad);
+      const northEast = window.L.latLng(bounds.latMax + pad, bounds.lonMax + pad);
+      map.fitBounds(window.L.latLngBounds(southWest, northEast), { padding: [20, 20] });
+    };
+
+    loadNeighbors();
 
     return () => {
       // do not destroy map to preserve state; just remove marker layer
@@ -146,6 +197,12 @@ export default function MapClient({ division = 'ঢাকা', district = 'ঢ�
         <h3 className="font-bold text-lg">লোকাল রিস্ক মানচিত্র</h3>
         <div className="text-sm text-gray-500">জোন: {division} / {district}</div>
       </div>
+
+      {isOffline && (
+        <div className="mb-3 p-2 rounded-md bg-yellow-50 border border-yellow-200 text-sm text-yellow-800">
+          আপনি অফলাইনে আছেন — ক্যাশড মানচিত্র ডেটা দেখানো হচ্ছে।
+        </div>
+      )}
 
       <div ref={mapRef} style={{ height: 420 }} className="rounded-md overflow-hidden border border-gray-100" />
 
