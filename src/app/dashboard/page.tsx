@@ -157,6 +157,11 @@ export default function DashboardPage() {
           <CropAlerts cropType="potato" location="Dhaka" lang={lang} />
         </div>
 
+        {/* Pest Identifier */}
+        <div className="mb-8">
+          <PestIdentifier lang={lang} />
+        </div>
+
         {/* Profile Info */}
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-8 mb-8">
           <h3 className="text-xl font-bold text-gray-900 mb-6">{text.profile}</h3>
